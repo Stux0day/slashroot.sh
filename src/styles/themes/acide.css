@@ -1,0 +1,43 @@
+/* ============================================================
+   Thème « Acide » — vert-jaune tranchant.
+
+   Pour l'activer, changer la ligne @import en tête de
+   src/styles/global.css :
+
+       @import './themes/acide.css';
+
+   C'est le seul endroit à modifier : tout le site passe par ces
+   variables. La bascule jour/nuit reste opérante, les deux
+   variantes étant définies ci-dessous.
+
+   Le fond et le texte restent quasi neutres, seul l'accent porte la
+   couleur : c'est ce qui distingue une teinte d'un filtre posé sur
+   toute la page.
+
+   Contrastes vérifiés (WCAG AA, seuil 4.5:1).
+   ============================================================ */
+
+:root,
+:root[data-theme='sombre'] {
+  --void: #0a0b08;
+  --panel: #121410;
+  --rule: #242820;
+  --text: #e3e6dd;
+  --dim: #878d7d;
+  --signal: #b6e83a;
+  --live: #4fae5a;
+  --voile: rgba(10, 11, 8, 0.85);
+}
+
+/* Variante diurne : l'accent saturé passe sous le seuil de lisibilité
+   sur fond clair, il est donc assombri à teinte égale. */
+:root[data-theme='clair'] {
+  --void: #eaece6;
+  --panel: #f5f7f2;
+  --rule: #ced5c6;
+  --text: #161810;
+  --dim: #5f6656;
+  --signal: #4e6b0d;
+  --live: #23703a;
+  --voile: rgba(234, 236, 230, 0.85);
+}

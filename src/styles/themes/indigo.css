@@ -1,0 +1,43 @@
+/* ============================================================
+   Thème « Indigo » — bleu-violet profond.
+
+   Pour l'activer, changer la ligne @import en tête de
+   src/styles/global.css :
+
+       @import './themes/indigo.css';
+
+   C'est le seul endroit à modifier : tout le site passe par ces
+   variables. La bascule jour/nuit reste opérante, les deux
+   variantes étant définies ci-dessous.
+
+   Le fond et le texte restent quasi neutres, seul l'accent porte la
+   couleur : c'est ce qui distingue une teinte d'un filtre posé sur
+   toute la page.
+
+   Contrastes vérifiés (WCAG AA, seuil 4.5:1).
+   ============================================================ */
+
+:root,
+:root[data-theme='sombre'] {
+  --void: #0a0b10;
+  --panel: #12141c;
+  --rule: #242838;
+  --text: #e2e4ec;
+  --dim: #858a9e;
+  --signal: #8b9cff;
+  --live: #4fae5a;
+  --voile: rgba(10, 11, 16, 0.85);
+}
+
+/* Variante diurne : l'accent saturé passe sous le seuil de lisibilité
+   sur fond clair, il est donc assombri à teinte égale. */
+:root[data-theme='clair'] {
+  --void: #e9ebf1;
+  --panel: #f4f5f9;
+  --rule: #cdd2e0;
+  --text: #15171f;
+  --dim: #5f6478;
+  --signal: #3d4fc4;
+  --live: #23703a;
+  --voile: rgba(233, 235, 241, 0.85);
+}

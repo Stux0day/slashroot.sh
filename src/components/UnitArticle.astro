@@ -1,0 +1,55 @@
+---
+// Fiche d'article reprise du bloc `unit` de la page d'accueil : les
+// métadonnées du frontmatter présentées comme une sortie de `systemctl status`.
+// Les styles (.unit, .ln, .dot…) sont dans global.css, partagés avec l'accueil.
+export interface Statistiques {
+  /** Mots du corps, blocs de code exclus. */
+  mots: number;
+  /** Minutes de lecture estimées. */
+  lecture: number;
+  /** Taille du fichier source, en octets. */
+  taille: number;
+}
+
+interface Props {
+  title: string;
+  pubDate: Date;
+  updatedDate?: Date;
+  /** Identifiant de collection, ex. « os/debian/test ». Absent hors blog. */
+  id?: string;
+  statistiques?: Statistiques;
+}
+
+const { title, pubDate, updatedDate, id, statistiques } = Astro.props;
+
+const formatDate = (d: Date | undefined) =>
+  d ? d.toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
+
+const etiquette = `Article : ${title}, publié le ${formatDate(pubDate)}`;
+
+// « os/debian/test » -> dossier « os/debian », fichier « test »
+const segments = id?.split('/') ?? [];
+const fichier = segments.at(-1) ?? '';
+const dossier = segments.slice(0, -1).join('/');
+const chemin = id ? `/blog/${id}/` : '';
+
+const enKo = (octets: number) =>
+  octets < 1024 ? `${octets} o` : `${(octets / 1024).toFixed(1)} ko`;
+---
+
+<div class="unit unit--compact" role="img" aria-label={etiquette}>
+  <div class="unit__barre">
+    <span class="unit__prompt">$</span> systemctl status {fichier || 'article'}
+  </div>
+  {/* Étiquettes calées sur 10 caractères, valeurs alignées en colonne. */}
+  <pre class="unit__sortie"><span class="ln"><span class="dot" aria-hidden="true"></span> <b>{title}</b></span>
+{chemin && <span class="ln">  Loaded: <span class="v">{chemin}</span></span>}
+<span class="ln">  Active: <span class="live">active (published)</span></span>
+<span class="ln">   Since: <span class="v">{formatDate(pubDate)}</span></span>
+{updatedDate && <span class="ln"> Updated: <span class="v">{formatDate(updatedDate)}</span></span>}
+{dossier && <span class="ln">  Folder: <span class="v">{dossier}</span></span>}
+{fichier && <span class="ln">  Source: <span class="v">{fichier}.md</span></span>}
+{statistiques && <span class="ln">   Words: <span class="v">{statistiques.mots}</span></span>}
+{statistiques && <span class="ln"> Reading: <span class="v">~{statistiques.lecture} min</span></span>}
+{statistiques && <span class="ln">    Size: <span class="v">{enKo(statistiques.taille)}</span></span>}</pre>
+</div>

@@ -1,0 +1,40 @@
+/* ============================================================
+   Thème « Rouge » — rouge signal sur noir neutre.
+   Jour suggéré : lundi.
+
+   Pour l'activer, changer la ligne @import en tête de
+   src/styles/global.css :
+
+       @import './themes/rouge.css';
+
+   C'est le seul endroit à modifier : tout le site passe par ces
+   variables. La bascule jour/nuit reste opérante, les deux
+   variantes étant définies ci-dessous.
+
+   Contrastes vérifiés (WCAG AA, seuil 4.5:1).
+   ============================================================ */
+
+:root,
+:root[data-theme='sombre'] {
+  --void: #0a0b0d;
+  --panel: #101216;
+  --rule: #1e2128;
+  --text: #dde1e6;
+  --dim: #78818f;
+  --signal: #ff3d3d;
+  --live: #3fb950;
+  --voile: rgba(10, 11, 13, 0.85);
+}
+
+/* Variante diurne : les accents saturés passent sous le seuil de
+   lisibilité sur fond clair, ils sont donc assombris à teinte égale. */
+:root[data-theme='clair'] {
+  --void: #e9ebed;
+  --panel: #f4f5f7;
+  --rule: #ccd1d7;
+  --text: #15181d;
+  --dim: #616a76;
+  --signal: #c52b2b;
+  --live: #1e7a35;
+  --voile: rgba(233, 235, 237, 0.85);
+}

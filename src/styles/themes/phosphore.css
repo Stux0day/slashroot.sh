@@ -1,0 +1,44 @@
+/* ============================================================
+   Thème « Phosphore » — vert cathodique, sur gris neutre.
+   Jour suggéré : mercredi.
+
+   Pour l'activer, changer la ligne @import en tête de
+   src/styles/global.css :
+
+       @import './themes/phosphore.css';
+
+   C'est le seul endroit à modifier : tout le site passe par ces
+   variables. La bascule jour/nuit reste opérante, les deux
+   variantes étant définies ci-dessous.
+
+   Le fond et le texte restent quasi neutres, seul l'accent porte la
+   couleur : c'est ce qui distingue une teinte d'un filtre posé sur
+   toute la page.
+
+   Contrastes vérifiés (WCAG AA, seuil 4.5:1).
+   ============================================================ */
+
+:root,
+:root[data-theme='sombre'] {
+  --void: #080a09;
+  --panel: #101412;
+  --rule: #202826;
+  --text: #dee3e0;
+  --dim: #7d8a84;
+  --signal: #3ddc84;
+  --live: #86e8b2;
+  --voile: rgba(8, 10, 9, 0.85);
+}
+
+/* Variante diurne : l'accent saturé passe sous le seuil de lisibilité
+   sur fond clair, il est donc assombri à teinte égale. */
+:root[data-theme='clair'] {
+  --void: #e8ebe9;
+  --panel: #f3f6f4;
+  --rule: #cbd4d0;
+  --text: #141816;
+  --dim: #5c6863;
+  --signal: #0d723d;
+  --live: #14663f;
+  --voile: rgba(232, 235, 233, 0.85);
+}

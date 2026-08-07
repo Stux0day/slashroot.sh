@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(awk '{printf \"%3d  %s\\\\n\", length\\($0\\), $0}')",
+      "Bash(curl -s http://localhost:4321/blog/os/debian/test/)",
+      "Bash(grep -n \"/\\\\* ---------- Hero ---------- \\\\*/\" src/pages/index.astro)",
+      "WebFetch(domain:n0tes.fr)",
+      "Bash(grep -o '<p class=\"bruit__ligne[^>]*>.\\\\{0,120\\\\}')",
+      "Bash(grep -o \"bruit-taper.\\\\{0,120\\\\}\" dist/index.html)",
+      "Bash(grep -o \"bruit-creneau.\\\\{0,110\\\\}\" dist/index.html)",
+      "Bash(python -c ' *)",
+      "Bash(sed -i 's/graine = 20260804/graine = 999/' src/components/Bruit.astro)",
+      "Bash(curl -s file:///dev/null)",
+      "Bash(grep -o '<p class=\"bruit__ligne[^>]*>.\\\\{0,55\\\\}' dist/index.html)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" \"http://localhost:4321/src/lib/bruit.ts\")"
+    ]
+  }
+}

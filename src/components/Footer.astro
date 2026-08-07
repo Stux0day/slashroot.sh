@@ -1,0 +1,25 @@
+---
+// Pied de page commun. Reprend celui de la page d'accueil : les pages du blog
+// affichaient encore le gabarit Astro d'origine (« Your name here » et les
+// liens sociaux du projet Astro).
+import { identite } from '../data/site';
+---
+
+<footer class="pied">
+  <span>&copy; {new Date().getFullYear()} {identite.nom}</span>
+  <span>Construit avec Astro — JavaScript réduit au strict minimum</span>
+</footer>
+
+<style>
+  .pied {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 1.75rem var(--marge);
+    border-top: 1px solid var(--rule);
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--dim);
+  }
+</style>

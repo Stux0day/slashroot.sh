@@ -1,0 +1,18 @@
+---
+// Applique le thème avant le premier rendu, pour éviter un flash de couleurs.
+// À inclure dans le <head> de chaque page. Doit rester inline et bloquant :
+// un script différé s'exécuterait après la peinture.
+---
+
+<script is:inline>
+  (() => {
+    let choix = null;
+    try {
+      choix = localStorage.getItem('theme');
+    } catch {
+      /* stockage indisponible : on retombe sur la préférence système */
+    }
+    const systeme = matchMedia('(prefers-color-scheme: light)').matches ? 'clair' : 'sombre';
+    document.documentElement.dataset.theme = choix === 'clair' || choix === 'sombre' ? choix : systeme;
+  })();
+</script>

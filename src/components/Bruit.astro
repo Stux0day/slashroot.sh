@@ -1,0 +1,299 @@
+---
+// Flux de journal SSH corrompu, défilant comme un `tail -f auth.log`.
+// Purement décoratif : aria-hidden, aucun lecteur d'écran ne doit tenter de
+// lire du base64 et des empreintes de clés.
+//
+// Le HTML est écrit au build à partir d'une graine fixe, puis un petit script
+// retire un flux différent à chaque visite. Sans JavaScript, la version du
+// build reste affichée — elle est déjà complète, rien ne manque.
+import { COMMANDES, construireBande, creerAlea } from '../lib/bruit';
+
+interface Props {
+  /** Lignes générées. Le flux boucle sur cet ensemble. */
+  lignes?: number;
+  /** Lignes visibles à la fois : fixe la hauteur du cadre. */
+  visibles?: number;
+  /** Secondes pour un cycle complet. */
+  duree?: number;
+  /** Graine du rendu initial. */
+  graine?: number;
+}
+
+// 40 lignes : le paquet compte 28 générateurs et une ligne sur quatre est
+// réservée aux alertes, il faut donc au moins 28 emplacements libres pour que
+// chaque registre passe une fois par cycle. La durée suit, à 2 s la ligne.
+const { lignes = 40, visibles = 7, duree = 80, graine = 20260804 } = Astro.props;
+
+const bande = construireBande(creerAlea(graine), lignes);
+
+/** Secondes par commande. */
+const CRENEAU = 7;
+const cycle = CRENEAU * COMMANDES.length;
+
+// Les pourcentages d'une image-clé n'acceptent pas de var() : ils dépendent du
+// nombre de commandes, donc les images-clés sont écrites ici, au build.
+// Les largeurs, elles, passent bien par une variable — d'où une seule paire
+// d'images-clés pour toutes les commandes, quelle que soit leur longueur.
+const part = 100 / COMMANDES.length;
+const pct = (f: number) => `${(f * part).toFixed(3)}%`.replace('.000%', '%');
+
+const animations = `
+@keyframes bruit-taper {
+  0% { width: 0; }
+  ${pct(0.55)}, 100% { width: calc(var(--n) * 1ch); }
+}
+@keyframes bruit-creneau {
+  0%, ${pct(0.94)} { opacity: 1; }
+  ${pct(0.97)}, 100% { opacity: 0; }
+}`;
+---
+
+<div class="bruit" aria-hidden="true" style={`--lignes-visibles:${visibles}; --duree:${duree}s`}>
+  {/* La fenêtre porte la hauteur et le masque ; la ligne de saisie reste en
+      dehors pour ne pas être estompée pendant qu'elle s'écrit. */}
+  <div class="bruit__fenetre">
+    {/* La bande est écrite deux fois : le défilement s'arrête à -50 %, soit
+        exactement le premier exemplaire, ce qui referme la boucle sans saut. */}
+    <div class="bruit__flux" data-lignes={lignes}>
+      {
+        [...bande, ...bande].map((l) => (
+          <p class:list={['bruit__ligne', l.niveau !== 'normal' && `bruit__ligne--${l.niveau}`]}>
+            <span class="bruit__chevron">&gt;&gt;</span> {l.texte}
+          </p>
+        ))
+      }
+    </div>
+  </div>
+
+  {/* L'invite est hors du cycle : seules les commandes se relaient, chacune
+      superposée aux autres et décalée par son animation-delay. */}
+  <div class="bruit__saisies" style={`--cycle:${cycle}s`}>
+    <span class="bruit__invite">flynn@bastion:~$</span>
+    <span class="bruit__pile">
+      {
+        COMMANDES.map((cmd, i) => (
+          <span class="bruit__saisie" style={`--n:${cmd.length}; --retard:${i * CRENEAU}s`}>
+            <span class="bruit__tape">{cmd}</span>
+            <span class="bruit__curseur" />
+          </span>
+        ))
+      }
+    </span>
+  </div>
+</div>
+
+<style is:global set:html={animations}></style>
+
+<script>
+  import { COMMANDES, construireBande, creerAlea } from '../lib/bruit';
+
+  const flux = document.querySelector<HTMLElement>('.bruit__flux');
+  if (flux) {
+    const lignes = Number(flux.dataset.lignes);
+    const bande = construireBande(creerAlea((Math.random() * 2 ** 32) >>> 0), lignes);
+
+    // Les nœuds existants sont réemployés plutôt que recréés : Astro leur a
+    // apposé l'attribut de portée de ses styles, qu'un élément fabriqué ici
+    // n'aurait pas — il s'afficherait sans aucune mise en forme.
+    flux.querySelectorAll<HTMLElement>('.bruit__ligne').forEach((p, i) => {
+      const l = bande[i % bande.length];
+      const chevron = p.firstElementChild;
+      p.classList.remove('bruit__ligne--alerte', 'bruit__ligne--nasty');
+      if (l.niveau !== 'normal') p.classList.add(`bruit__ligne--${l.niveau}`);
+      p.textContent = '';
+      if (chevron) p.append(chevron);
+      p.append(` ${l.texte}`);
+    });
+
+    // Les commandes sont redistribuées dans un autre ordre. Leur longueur pilote
+    // le nombre de pas de la frappe : sans mise à jour de --n, une commande
+    // courte hériterait du compte de celle qu'elle remplace.
+    const ordre = [...COMMANDES].sort(() => Math.random() - 0.5);
+    document.querySelectorAll<HTMLElement>('.bruit__saisie').forEach((slot, i) => {
+      const cmd = ordre[i % ordre.length];
+      const tape = slot.querySelector<HTMLElement>('.bruit__tape');
+      if (!tape) return;
+      tape.textContent = cmd;
+      slot.style.setProperty('--n', String(cmd.length));
+    });
+  }
+</script>
+
+<style>
+  .bruit {
+    margin: 1.75rem 0 0;
+    padding-left: 0.9rem;
+    border-left: 2px solid var(--rule);
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    line-height: 1.8;
+    color: var(--dim);
+    /* Décor : ni sélectionnable, ni copiable par mégarde. */
+    user-select: none;
+  }
+
+  .bruit__fenetre {
+    /* Hauteur figée en lignes : le cadre ne bouge pas pendant le défilement. */
+    height: calc(var(--lignes-visibles) * 1.8em);
+    overflow: hidden;
+    /* Le flux s'estompe aux deux bords plutôt que d'être tranché net. */
+    mask-image: linear-gradient(to bottom, transparent, #000 18%, #000 82%, transparent);
+  }
+
+  .bruit__flux {
+    animation: defile var(--duree) linear infinite;
+  }
+
+  @keyframes defile {
+    to {
+      transform: translateY(-50%);
+    }
+  }
+
+  .bruit__ligne {
+    margin: 0;
+    /* Pas de retour à la ligne : la coupe nette au bord donne l'impression
+       d'un flux qui continue hors-champ. */
+    white-space: pre;
+    opacity: 0.6;
+  }
+
+  .bruit__ligne--alerte {
+    color: var(--signal);
+    opacity: 1;
+  }
+
+  /* Vidéo inverse : le fond prend la couleur d'accent et le texte celle du
+     fond. C'est ainsi qu'un terminal signale une alerte, et ça détache la
+     ligne du flux sans avoir à changer de taille. */
+  .bruit__ligne--nasty {
+    /* max-content pour que le fond épouse le texte au lieu de barrer toute
+       la largeur du cadre. */
+    width: max-content;
+    max-width: 100%;
+    padding: 0 0.6ch;
+    background: var(--signal);
+    color: var(--void);
+    opacity: 1;
+    animation: palpite 1.4s steps(1, end) infinite;
+  }
+
+  .bruit__ligne--nasty .bruit__chevron {
+    color: var(--void);
+    opacity: 0.55;
+  }
+
+  /* Clignotement discret sur les lignes d'alerte seulement. */
+  @keyframes palpite {
+    0%,
+    88% {
+      opacity: 1;
+    }
+    94% {
+      opacity: 0.35;
+    }
+  }
+
+  .bruit__chevron {
+    color: var(--signal);
+    opacity: 0.8;
+  }
+
+  /* ---------- Ligne de saisie ---------- */
+  .bruit__saisies {
+    display: flex;
+    /* flex-start et non baseline : la pile ne contient que des éléments
+       positionnés, elle n'a donc pas de ligne de base propre à aligner.
+       Les deux côtés partageant le même interligne, leurs sommets suffisent. */
+    align-items: flex-start;
+    gap: 0.5ch;
+    margin-top: 1em;
+    padding-top: 0.7em;
+    border-top: 1px solid var(--rule);
+    white-space: pre;
+  }
+
+  .bruit__invite {
+    flex: none;
+    color: var(--signal);
+  }
+
+  /* Hauteur d'une ligne : les commandes s'empilent au même endroit, donc le
+     cadre ne bouge pas quand on passe d'une commande courte à une longue. */
+  .bruit__pile {
+    position: relative;
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 1.8em;
+  }
+
+  .bruit__saisie {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    align-items: baseline;
+    /* Masquée par défaut : chaque commande n'apparaît qu'à son tour, sinon
+       toutes seraient visibles avant le premier tour d'animation. */
+    opacity: 0;
+    animation: bruit-creneau var(--cycle) linear var(--retard) infinite;
+  }
+
+  /* Le texte est révélé par sa largeur, en autant de pas qu'il a de
+     caractères : chaque pas découvre exactement une lettre, ce qui donne
+     la frappe. La chasse fixe est ce qui rend le calcul en `ch` exact. */
+  .bruit__tape {
+    display: inline-block;
+    width: 0;
+    overflow: hidden;
+    color: var(--text);
+    vertical-align: bottom;
+    animation: bruit-taper var(--cycle) steps(var(--n)) var(--retard) infinite;
+  }
+
+  .bruit__curseur {
+    display: inline-block;
+    width: 0.6em;
+    height: 1em;
+    background: var(--signal);
+    translate: 0 0.12em;
+    animation: clignote 1.05s steps(1, end) infinite;
+  }
+
+  @keyframes clignote {
+    0%,
+    49% {
+      opacity: 1;
+    }
+    50%,
+    100% {
+      opacity: 0;
+    }
+  }
+
+  /* Le défilement d'un journal est exactement le type de mouvement que ce
+     réglage vise : on fige tout et on montre le premier écran. */
+  @media (prefers-reduced-motion: reduce) {
+    .bruit__flux,
+    .bruit__ligne--nasty,
+    .bruit__curseur,
+    .bruit__saisie {
+      animation: none;
+    }
+
+    /* Tout figer laisserait les commandes superposées et illisibles :
+       on n'en garde qu'une, écrite en entier. */
+    .bruit__saisie {
+      opacity: 0;
+    }
+
+    .bruit__saisie:first-child {
+      opacity: 1;
+    }
+
+    .bruit__tape {
+      width: calc(var(--n) * 1ch);
+      animation: none;
+    }
+  }
+</style>

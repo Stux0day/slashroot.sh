@@ -1,0 +1,43 @@
+/* ============================================================
+   Thème « Lagune » — turquoise, entre le vert et le cyan.
+
+   Pour l'activer, changer la ligne @import en tête de
+   src/styles/global.css :
+
+       @import './themes/lagune.css';
+
+   C'est le seul endroit à modifier : tout le site passe par ces
+   variables. La bascule jour/nuit reste opérante, les deux
+   variantes étant définies ci-dessous.
+
+   Le fond et le texte restent quasi neutres, seul l'accent porte la
+   couleur : c'est ce qui distingue une teinte d'un filtre posé sur
+   toute la page.
+
+   Contrastes vérifiés (WCAG AA, seuil 4.5:1).
+   ============================================================ */
+
+:root,
+:root[data-theme='sombre'] {
+  --void: #080c0c;
+  --panel: #101616;
+  --rule: #202c2c;
+  --text: #dfe6e6;
+  --dim: #7f8d8d;
+  --signal: #2dd4bf;
+  --live: #4fae5a;
+  --voile: rgba(8, 12, 12, 0.85);
+}
+
+/* Variante diurne : l'accent saturé passe sous le seuil de lisibilité
+   sur fond clair, il est donc assombri à teinte égale. */
+:root[data-theme='clair'] {
+  --void: #e7ecec;
+  --panel: #f3f6f6;
+  --rule: #c8d4d4;
+  --text: #131818;
+  --dim: #5b6666;
+  --signal: #0c7063;
+  --live: #23703a;
+  --voile: rgba(231, 236, 236, 0.85);
+}

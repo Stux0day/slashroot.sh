@@ -1,0 +1,43 @@
+/* ============================================================
+   Thème « Graphite » — aucune couleur, le contraste seul.
+
+   Pour l'activer, changer la ligne @import en tête de
+   src/styles/global.css :
+
+       @import './themes/graphite.css';
+
+   C'est le seul endroit à modifier : tout le site passe par ces
+   variables. La bascule jour/nuit reste opérante, les deux
+   variantes étant définies ci-dessous.
+
+   Le fond et le texte restent quasi neutres, seul l'accent porte la
+   couleur : c'est ce qui distingue une teinte d'un filtre posé sur
+   toute la page.
+
+   Contrastes vérifiés (WCAG AA, seuil 4.5:1).
+   ============================================================ */
+
+:root,
+:root[data-theme='sombre'] {
+  --void: #0b0b0b;
+  --panel: #141414;
+  --rule: #272727;
+  --text: #d4d4d4;
+  --dim: #8a8a8a;
+  --signal: #ffffff;
+  --live: #6fae7f;
+  --voile: rgba(11, 11, 11, 0.85);
+}
+
+/* Variante diurne : l'accent saturé passe sous le seuil de lisibilité
+   sur fond clair, il est donc assombri à teinte égale. */
+:root[data-theme='clair'] {
+  --void: #ebebeb;
+  --panel: #f6f6f6;
+  --rule: #d2d2d2;
+  --text: #2b2b2b;
+  --dim: #646464;
+  --signal: #000000;
+  --live: #23703a;
+  --voile: rgba(235, 235, 235, 0.85);
+}

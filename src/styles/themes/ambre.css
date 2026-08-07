@@ -1,0 +1,44 @@
+/* ============================================================
+   Thème « Ambre » — ambre des terminaux, sur gris chaud neutre.
+   Jour suggéré : mardi.
+
+   Pour l'activer, changer la ligne @import en tête de
+   src/styles/global.css :
+
+       @import './themes/ambre.css';
+
+   C'est le seul endroit à modifier : tout le site passe par ces
+   variables. La bascule jour/nuit reste opérante, les deux
+   variantes étant définies ci-dessous.
+
+   Le fond et le texte restent quasi neutres, seul l'accent porte la
+   couleur : c'est ce qui distingue une teinte d'un filtre posé sur
+   toute la page.
+
+   Contrastes vérifiés (WCAG AA, seuil 4.5:1).
+   ============================================================ */
+
+:root,
+:root[data-theme='sombre'] {
+  --void: #0c0b09;
+  --panel: #151310;
+  --rule: #2a2721;
+  --text: #e8e4dc;
+  --dim: #8d877c;
+  --signal: #f5a623;
+  --live: #4fae5a;
+  --voile: rgba(12, 11, 9, 0.85);
+}
+
+/* Variante diurne : l'accent saturé passe sous le seuil de lisibilité
+   sur fond clair, il est donc assombri à teinte égale. */
+:root[data-theme='clair'] {
+  --void: #edeae4;
+  --panel: #f7f5f1;
+  --rule: #d5cfc4;
+  --text: #1a1815;
+  --dim: #6a6459;
+  --signal: #8f5c05;
+  --live: #23703a;
+  --voile: rgba(237, 234, 228, 0.85);
+}

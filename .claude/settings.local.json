@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx astro *)",
+      "Bash(npm i *)",
+      "Bash(grep -n \"rgba\\\\|box-shadow\\\\|gradient\\\\|#[0-9a-fA-F]\\\\{3,6\\\\}\" pages/index.astro)",
+      "Bash(curl -s http://localhost:4321/)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:4321/)",
+      "Bash(grep -o \"topbar__dossiers:hover.\\\\{0,140\\\\}\" dist/index.html)",
+      "Bash(grep -o \"topbar__dossiers:hover.\\\\{0,180\\\\}\" dist/_astro/index.10CpRIjv.css)",
+      "Bash(python -c ' *)",
+      "Bash(python -)",
+      "Bash(curl -s \"http://localhost:4321/blog/os/debian/test/\")",
+      "Bash(grep -v '^\\\\s*$')",
+      "Bash(sed -i \"s|signal:'#0d7a6c'|signal:'#0c7063'|\" p3.mjs)",
+      "Bash(node c3.mjs)",
+      "Bash(curl -s \"http://localhost:4321/src/styles/global.css\")"
+    ]
+  }
+}

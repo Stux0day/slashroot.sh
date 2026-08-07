@@ -1,0 +1,43 @@
+/* ============================================================
+   Thème « Sépia » — brun désaturé, encre sur papier ancien.
+
+   Pour l'activer, changer la ligne @import en tête de
+   src/styles/global.css :
+
+       @import './themes/sepia.css';
+
+   C'est le seul endroit à modifier : tout le site passe par ces
+   variables. La bascule jour/nuit reste opérante, les deux
+   variantes étant définies ci-dessous.
+
+   Le fond et le texte restent quasi neutres, seul l'accent porte la
+   couleur : c'est ce qui distingue une teinte d'un filtre posé sur
+   toute la page.
+
+   Contrastes vérifiés (WCAG AA, seuil 4.5:1).
+   ============================================================ */
+
+:root,
+:root[data-theme='sombre'] {
+  --void: #0e0d0b;
+  --panel: #171512;
+  --rule: #2d2925;
+  --text: #e9e4dc;
+  --dim: #918a80;
+  --signal: #c08a5e;
+  --live: #4fae5a;
+  --voile: rgba(14, 13, 11, 0.85);
+}
+
+/* Variante diurne : l'accent saturé passe sous le seuil de lisibilité
+   sur fond clair, il est donc assombri à teinte égale. */
+:root[data-theme='clair'] {
+  --void: #eeeae3;
+  --panel: #f8f5f0;
+  --rule: #d9d2c8;
+  --text: #1d1a16;
+  --dim: #6d665c;
+  --signal: #8a5230;
+  --live: #23703a;
+  --voile: rgba(238, 234, 227, 0.85);
+}

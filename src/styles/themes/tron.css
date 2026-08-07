@@ -1,0 +1,40 @@
+/* ============================================================
+   Thème « Tron » — cyan électrique sur noir profond.
+   Jour suggéré : jeudi.
+
+   Pour l'activer, changer la ligne @import en tête de
+   src/styles/global.css :
+
+       @import './themes/tron.css';
+
+   C'est le seul endroit à modifier : tout le site passe par ces
+   variables. La bascule jour/nuit reste opérante, les deux
+   variantes étant définies ci-dessous.
+
+   Contrastes vérifiés (WCAG AA, seuil 4.5:1).
+   ============================================================ */
+
+:root,
+:root[data-theme='sombre'] {
+  --void: #000407;
+  --panel: #05141c;
+  --rule: #0d3b4d;
+  --text: #d6f6ff;
+  --dim: #5a9bab;
+  --signal: #00e5ff;
+  --live: #7dfdfe;
+  --voile: rgba(0, 4, 7, 0.85);
+}
+
+/* Variante diurne : les accents saturés passent sous le seuil de
+   lisibilité sur fond clair, ils sont donc assombris à teinte égale. */
+:root[data-theme='clair'] {
+  --void: #dfeef2;
+  --panel: #edf7f9;
+  --rule: #b9d4dc;
+  --text: #06222b;
+  --dim: #46707d;
+  --signal: #0b6b7e;
+  --live: #0c6a58;
+  --voile: rgba(223, 238, 242, 0.85);
+}

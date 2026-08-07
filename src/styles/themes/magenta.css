@@ -1,0 +1,43 @@
+/* ============================================================
+   Thème « Magenta » — rose vif sur gris neutre.
+
+   Pour l'activer, changer la ligne @import en tête de
+   src/styles/global.css :
+
+       @import './themes/magenta.css';
+
+   C'est le seul endroit à modifier : tout le site passe par ces
+   variables. La bascule jour/nuit reste opérante, les deux
+   variantes étant définies ci-dessous.
+
+   Le fond et le texte restent quasi neutres, seul l'accent porte la
+   couleur : c'est ce qui distingue une teinte d'un filtre posé sur
+   toute la page.
+
+   Contrastes vérifiés (WCAG AA, seuil 4.5:1).
+   ============================================================ */
+
+:root,
+:root[data-theme='sombre'] {
+  --void: #0d0b0c;
+  --panel: #161318;
+  --rule: #2b2530;
+  --text: #e7e2e5;
+  --dim: #8f8790;
+  --signal: #f472b6;
+  --live: #4fae5a;
+  --voile: rgba(13, 11, 12, 0.85);
+}
+
+/* Variante diurne : l'accent saturé passe sous le seuil de lisibilité
+   sur fond clair, il est donc assombri à teinte égale. */
+:root[data-theme='clair'] {
+  --void: #eeeaec;
+  --panel: #f8f5f7;
+  --rule: #d8d0d5;
+  --text: #1b171a;
+  --dim: #6b636a;
+  --signal: #b02a72;
+  --live: #23703a;
+  --voile: rgba(238, 234, 236, 0.85);
+}

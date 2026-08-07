@@ -1,0 +1,44 @@
+/* ============================================================
+   Thème « Améthyste » — violet, sur gris neutre.
+   Jour suggéré : samedi.
+
+   Pour l'activer, changer la ligne @import en tête de
+   src/styles/global.css :
+
+       @import './themes/amethyste.css';
+
+   C'est le seul endroit à modifier : tout le site passe par ces
+   variables. La bascule jour/nuit reste opérante, les deux
+   variantes étant définies ci-dessous.
+
+   Le fond et le texte restent quasi neutres, seul l'accent porte la
+   couleur : c'est ce qui distingue une teinte d'un filtre posé sur
+   toute la page.
+
+   Contrastes vérifiés (WCAG AA, seuil 4.5:1).
+   ============================================================ */
+
+:root,
+:root[data-theme='sombre'] {
+  --void: #0c0b10;
+  --panel: #141319;
+  --rule: #272531;
+  --text: #e3e1e8;
+  --dim: #8a8698;
+  --signal: #b47cf5;
+  --live: #4fae5a;
+  --voile: rgba(12, 11, 16, 0.85);
+}
+
+/* Variante diurne : l'accent saturé passe sous le seuil de lisibilité
+   sur fond clair, il est donc assombri à teinte égale. */
+:root[data-theme='clair'] {
+  --void: #eae9ee;
+  --panel: #f5f4f8;
+  --rule: #d0cdd8;
+  --text: #17161c;
+  --dim: #635f70;
+  --signal: #7b30c4;
+  --live: #23703a;
+  --voile: rgba(234, 233, 238, 0.85);
+}

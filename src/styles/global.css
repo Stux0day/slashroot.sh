@@ -1,0 +1,214 @@
+/* ---------- Thème actif ----------
+   Une seule ligne à changer pour repeindre tout le site. Douze thèmes dans
+   ./themes/, classés par teinte de l'accent :
+
+     rouge      rouge signal          magenta    rose vif
+     sepia      brun désaturé         amethyste  violet
+     ambre      ambre de terminal     indigo     bleu-violet
+     acide      vert-jaune            nord       bleu arctique
+     phosphore  vert cathodique       tron       cyan électrique
+     lagune     turquoise             graphite   aucune couleur
+
+   Chacun définit sa variante sombre et sa variante claire, donc la bascule
+   jour/nuit fonctionne quel que soit le thème choisi.
+
+   Doit rester en première ligne : un @import placé après d'autres règles
+   est ignoré par la spécification CSS. */
+@import './themes/rouge.css';
+
+/* Jetons de design + reset + primitives réellement partagées.
+   Tout ce qui est spécifique à un composant reste dans son <style> scopé. */
+
+:root {
+  --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --sans: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+  --display: 'IBM Plex Sans Condensed', 'IBM Plex Sans', system-ui, sans-serif;
+
+  --marge: clamp(1.25rem, 5vw, 5rem);
+  --rail: 10rem;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--void);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 3px;
+}
+
+/* Boutons : utilisés dans plusieurs pages, donc globaux. */
+.btn {
+  display: inline-block;
+  padding: 0.7rem 1.4rem;
+  border: 1px solid var(--rule);
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  text-decoration: none;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.btn:hover {
+  border-color: var(--signal);
+  color: var(--signal);
+}
+
+.btn--primaire {
+  border-color: var(--signal);
+  color: var(--signal);
+}
+
+.btn--primaire:hover {
+  background: var(--signal);
+  color: var(--void);
+}
+
+/* ---------- Signature : le bloc unit ----------
+   Utilisé par la page d'accueil et par l'en-tête des articles : c'est
+   devenu une primitive partagée, d'où sa place ici plutôt que dans le
+   <style> d'une page. */
+.unit {
+  border: 1px solid var(--rule);
+  background: var(--panel);
+}
+
+.unit__barre {
+  padding: 0.7rem 1rem;
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--dim);
+}
+
+.unit__prompt {
+  color: var(--signal);
+}
+
+.unit__sortie {
+  margin: 0;
+  padding: 1.25rem 1rem;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  line-height: 1.85;
+  color: var(--dim);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* Variante resserrée, pour l'en-tête des articles : mêmes couleurs, mais
+   interligne et marges réduits. La version de la page d'accueil garde son
+   ampleur — c'est une signature, pas une fiche technique. */
+.unit--compact .unit__barre {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.72rem;
+}
+
+.unit--compact .unit__sortie {
+  padding: 0.7rem 0.75rem;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  /* `anywhere`, hérité du bloc large, coupe en plein milieu d'un chemin.
+     `break-word` ne casse un mot qu'en dernier recours. */
+  overflow-wrap: break-word;
+}
+
+/* Retrait négatif : les étiquettes s'alignent sur 10 caractères
+   (« ␣Updated: »), donc une valeur qui passe à la ligne reprend sous la
+   colonne des valeurs au lieu de revenir à la marge. */
+.unit--compact .ln {
+  padding-left: 10ch;
+  text-indent: -10ch;
+}
+
+.unit__sortie b {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.unit__sortie .v {
+  color: var(--text);
+}
+
+.unit__sortie .live {
+  color: var(--live);
+}
+
+.dot {
+  display: inline-block;
+  width: 0.55em;
+  height: 0.55em;
+  border-radius: 50%;
+  background: var(--live);
+  animation: pouls 2.6s ease-in-out infinite;
+}
+
+/* Révélation séquentielle : les lignes arrivent comme un log */
+.ln {
+  display: block;
+  opacity: 0;
+  animation: apparait 0.4s ease forwards;
+}
+
+.ln:nth-child(1) { animation-delay: 0.05s; }
+.ln:nth-child(2) { animation-delay: 0.18s; }
+.ln:nth-child(3) { animation-delay: 0.31s; }
+.ln:nth-child(4) { animation-delay: 0.44s; }
+.ln:nth-child(5) { animation-delay: 0.57s; }
+.ln:nth-child(6) { animation-delay: 0.70s; }
+.ln:nth-child(7) { animation-delay: 0.83s; }
+.ln:nth-child(8) { animation-delay: 0.96s; }
+.ln:nth-child(9) { animation-delay: 1.09s; }
+.ln:nth-child(10) { animation-delay: 1.22s; }
+
+@keyframes apparait {
+  from { opacity: 0; transform: translateY(3px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes pouls {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .ln,
+  .dot {
+    animation: none;
+    opacity: 1;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

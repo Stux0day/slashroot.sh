@@ -1,0 +1,40 @@
+/* ============================================================
+   Thème « Nord » — bleu arctique, froid et posé.
+   Jour suggéré : vendredi.
+
+   Pour l'activer, changer la ligne @import en tête de
+   src/styles/global.css :
+
+       @import './themes/nord.css';
+
+   C'est le seul endroit à modifier : tout le site passe par ces
+   variables. La bascule jour/nuit reste opérante, les deux
+   variantes étant définies ci-dessous.
+
+   Contrastes vérifiés (WCAG AA, seuil 4.5:1).
+   ============================================================ */
+
+:root,
+:root[data-theme='sombre'] {
+  --void: #1b2027;
+  --panel: #232a33;
+  --rule: #39434f;
+  --text: #e0e6ef;
+  --dim: #8593a5;
+  --signal: #7fc3e3;
+  --live: #90d4a8;
+  --voile: rgba(27, 32, 39, 0.85);
+}
+
+/* Variante diurne : les accents saturés passent sous le seuil de
+   lisibilité sur fond clair, ils sont donc assombris à teinte égale. */
+:root[data-theme='clair'] {
+  --void: #e6ebf2;
+  --panel: #f2f5f9;
+  --rule: #c5d0de;
+  --text: #10161f;
+  --dim: #4e5c6e;
+  --signal: #1f6e96;
+  --live: #1c6b46;
+  --voile: rgba(230, 235, 242, 0.85);
+}

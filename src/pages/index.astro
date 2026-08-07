@@ -1,0 +1,460 @@
+---
+// src/pages/index.astro
+// Page d'accueil autonome : aucune dépendance à un layout existant.
+// Tu pourras extraire le <head> dans src/layouts/ plus tard.
+
+import { Font } from 'astro:assets';
+import { getCollection, type CollectionEntry } from 'astro:content';
+
+import Bruit from '../components/Bruit.astro';
+import Footer from '../components/Footer.astro';
+import ThemeScript from '../components/ThemeScript.astro';
+import Topbar from '../components/Topbar.astro';
+
+// --- Contenu éditorial : voir src/data/site.ts --------------------------
+import { banniere, identite, stack, travaux } from '../data/site';
+
+// Jetons de thème, reset et boutons : source unique.
+import '../styles/global.css';
+
+// --- Articles ------------------------------------------------------------
+let tousLesArticles: CollectionEntry<'blog'>[] = [];
+try {
+  tousLesArticles = await getCollection('blog');
+} catch {
+  tousLesArticles = [];
+}
+
+const parDateDecroissante = (a: CollectionEntry<'blog'>, b: CollectionEntry<'blog'>) =>
+  (b.data.pubDate?.valueOf() ?? 0) - (a.data.pubDate?.valueOf() ?? 0);
+
+const articles = [...tousLesArticles].sort(parDateDecroissante).slice(0, 3);
+
+const formatDate = (d: Date | undefined) =>
+  d ? d.toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
+---
+
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{identite.nom} — {identite.role}</title>
+    <meta
+      name="description"
+      content="Portfolio d'un administrateur systèmes et infrastructure : Linux, Terraform, gestion de secrets, supervision."
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+
+    {/* Cette page a son propre <head> et ne passe pas par BaseHead : toutes
+        les polices se déclarent donc ici. VT323 pour la bannière, les deux
+        autres pour la barre supérieure. */}
+    <Font cssVariable="--font-vt323" preload />
+    <Font cssVariable="--font-zen-tokyo-zoo" preload />
+    <Font cssVariable="--font-rubik-glitch" preload />
+
+    <ThemeScript />
+  </head>
+
+  <body>
+    <Topbar />
+
+    <main>
+      <!-- HERO : titre en police pixel à gauche, sortie systemctl à droite -->
+      <section class="hero">
+        <div class="hero__titre">
+          <p class="banniere__intro">
+            <span class="banniere__ponct">//</span>
+            {banniere.intro}
+          </p>
+          <h1 class="banniere__titre">
+            <span class="banniere__ponct" aria-hidden="true">{'{"'}</span>
+            {banniere.titre}
+            <span class="banniere__ponct" aria-hidden="true">{'"}'}</span>
+          </h1>
+          <Bruit />
+          <div class="hero__actions">
+            <a class="btn btn--primaire" href={`mailto:${identite.email}`}>Me contacter</a>
+            <a class="btn" href="/cv.pdf">Télécharger le CV</a>
+          </div>
+        </div>
+
+        <div class="unit" role="img" aria-label={`Statut : ${identite.role}, ${identite.statut}`}>
+          <div class="unit__barre">
+            <span class="unit__prompt">$</span> systemctl status {identite.service}
+          </div>
+          <pre class="unit__sortie"><span class="ln"><span class="dot" aria-hidden="true"></span> <b>{identite.service}</b> — {identite.role}</span>
+<span class="ln">     Loaded: <span class="v">loaded</span> (/etc/systemd/system/{identite.service}; <span class="v">enabled</span>)</span>
+<span class="ln">     Active: <span class="live">active (running)</span> since {identite.depuis}</span>
+<span class="ln">   Location: <span class="v">{identite.ville}</span></span>
+<span class="ln">     Status: <span class="v">"{identite.statut}"</span></span>
+<span class="ln">      Tasks: <span class="v">infra, automatisation, sécurité, observabilité</span></span></pre>
+        </div>
+      </section>
+
+      <!-- STACK : structure clé/valeur, comme un fichier de configuration -->
+      <section id="stack" class="bloc">
+        <p class="bloc__label"># stack</p>
+        <div class="bloc__corps">
+          <dl class="conf">
+            {
+              stack.map((ligne) => (
+                <div class="conf__ligne">
+                  <dt>{ligne.cle}</dt>
+                  <dd>{ligne.valeur}</dd>
+                </div>
+              ))
+            }
+          </dl>
+        </div>
+      </section>
+
+      <!-- TRAVAUX -->
+      <section id="travaux" class="bloc">
+        <p class="bloc__label"># travaux</p>
+        <div class="bloc__corps">
+          <div class="grille">
+            {
+              travaux.map((t) => (
+                <article class="panneau">
+                  <h2>{t.titre}</h2>
+                  <p>{t.resume}</p>
+                  <ul class="tags">
+                    {t.tags.map((tag) => (
+                      <li>{tag}</li>
+                    ))}
+                  </ul>
+                </article>
+              ))
+            }
+          </div>
+        </div>
+      </section>
+
+      <!-- ÉCRITS : alimenté par la collection blog -->
+      {
+        articles.length > 0 && (
+          <section id="ecrits" class="bloc">
+            <p class="bloc__label"># écrits</p>
+            <div class="bloc__corps">
+              <ul class="liste">
+                {articles.map((a) => (
+                  <li>
+                    <a href={`/blog/${a.id}/`}>
+                      <time datetime={a.data.pubDate?.toISOString()}>
+                        {formatDate(a.data.pubDate)}
+                      </time>
+                      <span class="liste__titre">{a.data.title}</span>
+                      <span class="liste__desc">{a.data.description}</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+              <a class="lien-plus" href="/blog/">Tous les articles →</a>
+            </div>
+          </section>
+        )
+      }
+
+      <!-- CONTACT -->
+      <section id="contact" class="bloc">
+        <p class="bloc__label"># contact</p>
+        <div class="bloc__corps">
+          <p class="contact__phrase">
+            Une infrastructure à construire, à reprendre ou à fiabiliser ? Écrivez-moi.
+          </p>
+          <dl class="conf">
+            <div class="conf__ligne">
+              <dt>email</dt>
+              <dd><a href={`mailto:${identite.email}`}>{identite.email}</a></dd>
+            </div>
+            <div class="conf__ligne">
+              <dt>github</dt>
+              <dd><a href={identite.github} rel="me noopener">{identite.github}</a></dd>
+            </div>
+            <div class="conf__ligne">
+              <dt>linkedin</dt>
+              <dd><a href={identite.linkedin} rel="me noopener">{identite.linkedin}</a></dd>
+            </div>
+          </dl>
+        </div>
+      </section>
+    </main>
+
+    <Footer />
+
+    <style is:global>
+      /* Jetons, reset, .btn : voir src/styles/global.css */
+
+      /* ---------- Titre du hero ---------- */
+      /* Seul endroit du site en VT323 : une police pixel n'a qu'une graisse
+         et fatigue vite en lecture suivie, mais elle porte bien un titre.
+         Tailles calées sur une demi-largeur, le titre partageant la ligne
+         avec le bloc systemctl. */
+      .banniere__intro {
+        margin: 0 0 0.15em;
+        color: var(--signal);
+        font-family: var(--font-vt323), var(--mono);
+        font-size: clamp(1rem, 1.8vw, 1.5rem);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .banniere__titre {
+        margin: 0;
+        color: var(--signal);
+        font-family: var(--font-vt323), var(--mono);
+        font-weight: 400;
+        font-size: clamp(2.2rem, 5vw, 4.2rem);
+        line-height: 1;
+        letter-spacing: 0.02em;
+      }
+
+      /* Accolades, guillemets et « // » : ponctuation de code, en retrait
+         pour que le texte reste ce qu'on lit en premier. */
+      .banniere__ponct {
+        color: var(--dim);
+      }
+
+      /* ---------- Hero ---------- */
+      .hero {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: clamp(2rem, 5vw, 4rem);
+        align-items: center;
+        padding: clamp(3.5rem, 9vw, 7rem) var(--marge);
+        border-bottom: 1px solid var(--rule);
+      }
+
+      /* Sans min-width, une ligne de bruit trop longue élargirait la colonne
+         au lieu d'être rognée, et déséquilibrerait la grille. */
+      .hero__titre {
+        min-width: 0;
+      }
+
+      .hero__actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-top: 2rem;
+      }
+
+      /* ---------- Blocs de section ---------- */
+      .bloc {
+        display: grid;
+        grid-template-columns: var(--rail) 1fr;
+        gap: 2rem;
+        padding: clamp(2.5rem, 6vw, 4.5rem) var(--marge);
+        border-bottom: 1px solid var(--rule);
+      }
+
+      .bloc__label {
+        margin: 0;
+        font-family: var(--mono);
+        font-size: 0.78rem;
+        color: var(--signal);
+      }
+
+      .bloc__corps {
+        min-width: 0;
+      }
+
+      /* ---------- Lignes de configuration ---------- */
+      .conf {
+        margin: 0;
+        border-top: 1px solid var(--rule);
+      }
+
+      .conf__ligne {
+        display: grid;
+        grid-template-columns: 12rem 1fr;
+        gap: 1rem;
+        padding: 0.85rem 0;
+        border-bottom: 1px solid var(--rule);
+      }
+
+      .conf dt {
+        font-family: var(--mono);
+        font-size: 0.82rem;
+        color: var(--dim);
+      }
+
+      .conf dd {
+        margin: 0;
+        font-family: var(--mono);
+        font-size: 0.85rem;
+      }
+
+      .conf dd a {
+        color: var(--text);
+        text-decoration: none;
+        border-bottom: 1px solid var(--rule);
+      }
+
+      .conf dd a:hover {
+        color: var(--signal);
+        border-color: var(--signal);
+      }
+
+      /* ---------- Panneaux de travaux ---------- */
+      .grille {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+        gap: 1px;
+        background: var(--rule);
+        border: 1px solid var(--rule);
+      }
+
+      .panneau {
+        padding: 1.5rem;
+        background: var(--panel);
+        border-left: 2px solid transparent;
+        transition: border-color 0.15s ease;
+      }
+
+      .panneau:hover {
+        border-left-color: var(--signal);
+      }
+
+      .panneau h2 {
+        margin: 0 0 0.75rem;
+        font-family: var(--display);
+        font-size: 1.15rem;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+      }
+
+      .panneau p {
+        margin: 0 0 1.25rem;
+        font-size: 0.92rem;
+        color: var(--dim);
+      }
+
+      .tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .tags li {
+        padding: 0.2rem 0.55rem;
+        border: 1px solid var(--rule);
+        font-family: var(--mono);
+        font-size: 0.7rem;
+        color: var(--dim);
+      }
+
+      /* ---------- Liste d'articles ---------- */
+      .liste {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        border-top: 1px solid var(--rule);
+      }
+
+      .liste li {
+        border-bottom: 1px solid var(--rule);
+      }
+
+      .liste a {
+        display: grid;
+        grid-template-columns: 11rem 1fr;
+        gap: 0.35rem 1rem;
+        padding: 1.1rem 0;
+        text-decoration: none;
+      }
+
+      .liste time {
+        font-family: var(--mono);
+        font-size: 0.78rem;
+        color: var(--dim);
+      }
+
+      .liste__titre {
+        font-family: var(--display);
+        font-size: 1.1rem;
+        font-weight: 600;
+      }
+
+      .liste__desc {
+        grid-column: 2;
+        font-size: 0.9rem;
+        color: var(--dim);
+      }
+
+      .liste a:hover .liste__titre {
+        color: var(--signal);
+      }
+
+      .lien-plus {
+        display: inline-block;
+        margin-top: 1.5rem;
+        font-family: var(--mono);
+        font-size: 0.82rem;
+        color: var(--dim);
+        text-decoration: none;
+      }
+
+      .lien-plus:hover {
+        color: var(--signal);
+      }
+
+      /* ---------- Contact & pied ---------- */
+      .contact__phrase {
+        max-width: 46ch;
+        margin: 0 0 2rem;
+        font-family: var(--display);
+        font-size: clamp(1.35rem, 2.5vw, 1.9rem);
+        font-weight: 600;
+        line-height: 1.25;
+        letter-spacing: -0.01em;
+      }
+
+      /* ---------- Adaptatif ---------- */
+      @media (max-width: 900px) {
+        .hero {
+          grid-template-columns: 1fr;
+        }
+
+        .bloc {
+          grid-template-columns: 1fr;
+          gap: 1.25rem;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .conf__ligne,
+        .liste a {
+          grid-template-columns: 1fr;
+        }
+
+        .liste__desc {
+          grid-column: 1;
+        }
+
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+
+        .ln,
+        .dot {
+          animation: none;
+          opacity: 1;
+        }
+      }
+    </style>
+
+  </body>
+</html>
