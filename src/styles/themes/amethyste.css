@@ -30,15 +30,20 @@
   --voile: rgba(12, 11, 16, 0.85);
 }
 
-/* Variante diurne : l'accent saturé passe sous le seuil de lisibilité
-   sur fond clair, il est donc assombri à teinte égale. */
+/* Variante diurne. Deux règles :
+   — les accents saturés passent sous le seuil de lisibilité sur fond
+     clair, ils sont donc assombris à teinte égale ;
+   — le fond de page est un blanc très légèrement teinté de l'accent et
+     les panneaux sont en blanc pur : ils se détachent du fond, comme en
+     mode sombre où ils sont plus clairs que la page. Un fond gris avec
+     des panneaux gris clair donnait un rendu terne. */
 :root[data-theme='clair'] {
-  --void: #eae9ee;
-  --panel: #f5f4f8;
-  --rule: #d0cdd8;
-  --text: #17161c;
-  --dim: #635f70;
+  --void: #f8f5fd;
+  --panel: #ffffff;
+  --rule: #e6e0f1;
+  --text: #17151c;
+  --dim: #656071;
   --signal: #7b30c4;
   --live: #23703a;
-  --voile: rgba(234, 233, 238, 0.85);
+  --voile: rgba(248, 245, 253, 0.85);
 }

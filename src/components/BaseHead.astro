@@ -34,9 +34,8 @@ const { title, description, image = FallbackImage } = Astro.props;
 <meta name="generator" content={Astro.generator} />
 
 <Font cssVariable="--font-atkinson" preload />
-{/* Les dossiers de la barre supérieure sont sur toutes les pages, donc leur
-    police se charge ici et non dans une page en particulier. */}
-<Font cssVariable="--font-zen-tokyo-zoo" preload />
+{/* La barre supérieure est sur toutes les pages, donc sa police se charge ici
+    et non dans une page en particulier. */}
 <Font cssVariable="--font-rubik-glitch" preload />
 
 <ThemeScript />

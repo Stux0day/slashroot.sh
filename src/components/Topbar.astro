@@ -5,7 +5,7 @@
 // Les liens de sections pointent vers `/#ancre` et non `#ancre` : depuis une
 // page d'article, une ancre nue ne mènerait nulle part.
 import { type CollectionEntry, getCollection } from 'astro:content';
-import { dossiers as dossiersDeclares, identite } from '../data/site';
+import { certifs, dossiers as dossiersDeclares, identite } from '../data/site';
 
 let tousLesArticles: CollectionEntry<'blog'>[] = [];
 try {
@@ -141,8 +141,6 @@ const dossiers = [...dossiersDeclares, ...nonDeclares].map(({ id, libelle }) => 
     totalDossier: entrees.length,
   };
 });
-
-const aDesArticles = tousLesArticles.length > 0;
 ---
 
 <header class="topbar">
@@ -186,8 +184,7 @@ const aDesArticles = tousLesArticles.length > 0;
   <nav class="topbar__nav" aria-label="Sections du site">
     <a href="/#stack">stack</a>
     <a href="/#travaux">travaux</a>
-    {aDesArticles && <a href="/#ecrits">écrits</a>}
-    <a href="/#contact">contact</a>
+    {certifs.length > 0 && <a href="/#certifs">certifs</a>}
     {/* Bouton sans texte : l'aria-label porte seul le nom accessible, et le
         title donne l'équivalent au survol pour qui n'utilise pas de lecteur
         d'écran. Les deux sont donc obligatoires ici, pas décoratifs. */}
@@ -225,7 +222,9 @@ const aDesArticles = tousLesArticles.length > 0;
   }
 
   /* Identité en Rubik Glitch : lettres volontairement décalées. Illisible en
-     dessous d'environ 1rem, d'où le plancher du clamp. */
+     dessous d'environ 1rem, d'où le plancher du clamp. La casse d'origine est
+     conservée — « Flynnhub.system » est un nom de domaine, le passer en
+     capitales comme le reste de la barre lui ferait perdre cette lecture. */
   .topbar__id {
     min-width: 0;
     color: var(--text);
@@ -243,10 +242,14 @@ const aDesArticles = tousLesArticles.length > 0;
     font-family: var(--mono);
   }
 
+  /* Gouttières resserrées depuis le passage à Rubik Glitch : son dessin est
+     nettement plus large que la précédente display, et les trois zones de la
+     barre tiennent juste sur une ligne. Chaque gouttière économisée est de la
+     marge gagnée avant que la colonne du centre ne heurte celle de droite. */
   .topbar__dossiers {
     display: flex;
     justify-content: center;
-    gap: 1.5rem;
+    gap: 0.85rem;
   }
 
   .topbar__nav {
@@ -254,26 +257,29 @@ const aDesArticles = tousLesArticles.length > 0;
     align-items: center;
     justify-self: end;
     min-width: 0;
-    gap: 1.5rem;
+    gap: 0.9rem;
   }
 
-  /* Même police que les dossiers du centre, mais un cran en dessous : ce sont
-     des liens secondaires. Le sélecteur vise les liens et non le conteneur,
-     pour que la bascule de thème garde la chasse fixe — Zen Tokyo Zoo n'a ni
-     ☀ ni ☾ et les ferait tomber dans une police de repli. */
+  /* Même police et même encre que les dossiers du centre : ces liens restent un
+     cran en dessous par la taille, pas par un gris plus clair. Les teinter en
+     --dim les rendait délavés de jour pour un gain de hiérarchie que l'échelle
+     donne déjà. Le plancher du clamp est à 1rem : en dessous, le décalage des
+     lettres de Rubik Glitch cesse d'être lisible.
+
+     Les libellés sont en minuscules dans le markup ; Zen Tokyo Zoo, qui les
+     rendait auparavant, ne dessine que des capitales. text-transform reprend
+     donc à sa charge ce que la police faisait implicitement.
+
+     Le sélecteur vise les liens et non le conteneur, pour que la bascule de
+     thème garde sa chasse — Rubik Glitch n'a ni ☀ ni ☾ et les ferait tomber
+     dans une police de repli. */
   .topbar__nav a {
-    color: var(--dim);
-    font-family: var(--font-zen-tokyo-zoo), var(--mono);
-    font-size: clamp(1rem, 1.45vw, 1.35rem);
+    color: var(--text);
+    font-family: var(--font-rubik-glitch), var(--mono);
+    font-size: clamp(1rem, 1.1vw, 1.05rem);
     line-height: 1;
+    text-transform: uppercase;
     text-decoration: none;
-    /* Correction optique. Zen Tokyo Zoo a une hauteur d'x de 0,402 em contre
-       0,804 em de capitale, et ces quatre libellés n'ont aucun jambage : leur
-       encre se masse dans le bas de la boîte, que `align-items: center` centre
-       pourtant sur sa hauteur géométrique. La ligne de base tombant à 0,85 em,
-       l'écart mesuré est de 0,149 em — on le remonte. `transform` et non
-       `margin` pour ne rien changer à la mise en page. */
-    transform: translateY(-0.15em);
   }
 
   .topbar__nav a:hover {
@@ -288,26 +294,31 @@ const aDesArticles = tousLesArticles.length > 0;
     --delai-fermeture: 1s;
   }
 
-  /* Les noms de dossiers sont en Zen Tokyo Zoo, police display réservée à ces
-     étiquettes courtes. `font: inherit` remet d'abord tout à l'état de la
-     barre, donc la famille et la taille se redéclarent après lui, jamais
-     avant. line-height:1 empêche la hauteur de la barre de bouger. Le contenu
-     des menus déroulants reste en chasse fixe — c'est lui qui aligne les
-     branches « ├─ ». */
+  /* Les noms de dossiers reprennent la Rubik Glitch de l'identité : la barre
+     parle d'une seule voix. Elle remplace Zen Tokyo Zoo, une display évidée à
+     traits fins qui posait deux problèmes — ses traits maigrissaient sur fond
+     clair et la rendaient délavée de jour, et son dessin très large faisait
+     déborder la colonne centrale sur les liens de droite.
+
+     Rubik Glitch est plus étroite, mais reste une display : ces libellés sont
+     descendus de 1.7rem à 1.2rem, sans quoi la colonne du milieu déborderait à
+     nouveau. Le plancher reste au-dessus de 1rem, seuil en dessous duquel le
+     décalage des lettres cesse d'être lisible.
+
+     `font: inherit` remet d'abord tout à l'état de la barre, donc la famille
+     et la taille se redéclarent après lui, jamais avant. line-height:1 empêche
+     la hauteur de la barre de bouger. Le contenu des menus déroulants reste en
+     chasse fixe — c'est lui qui aligne les branches « ├─ ». */
   .dossier__nom {
     padding: 0;
     border: 0;
     background: none;
-    color: var(--dim);
+    color: var(--text);
     font: inherit;
-    font-family: var(--font-zen-tokyo-zoo), var(--mono);
-    /* Les cinq libellés cumulent 21,35 em de large : à taille fixe, la colonne
-       du milieu déborde dès que la fenêtre se resserre. Le plancher reprend
-       donc l'ancienne taille — aucune régression sur petit écran — et le
-       plafond évite que la barre n'avale la page sur un écran large. */
-    font-size: clamp(1.05rem, 1.8vw, 1.7rem);
+    font-family: var(--font-rubik-glitch), var(--mono);
+    font-size: clamp(1rem, 1.1vw, 1.1rem);
     line-height: 1;
-    letter-spacing: 0.02em;
+    letter-spacing: 0;
     cursor: pointer;
   }
 
@@ -449,9 +460,12 @@ const aDesArticles = tousLesArticles.length > 0;
     padding: 0;
     border: 0;
     background: none;
-    color: var(--dim);
+    /* Même encre que les dossiers et les liens : --dim laissait le symbole en
+       retrait alors qu'il porte seul le sens du bouton. --text le fonce de jour
+       et l'éclaircit de nuit d'un seul réglage. */
+    color: var(--text);
     font-family: var(--mono);
-    font-size: 1.5rem;
+    font-size: 1.75rem;
     line-height: 1;
     cursor: pointer;
   }
@@ -485,9 +499,28 @@ const aDesArticles = tousLesArticles.length > 0;
     display: inline;
   }
 
-  @media (max-width: 640px) {
+  /* Rubik Glitch est large : à partir d'environ 1320px, la colonne du centre
+     vient heurter celle de droite. Les 1fr symétriques y sont pour beaucoup —
+     ils centrent le bloc du milieu sur la page sans tenir compte du fait que la
+     zone de droite est bien plus encombrante que l'identité à gauche.
+
+     Sur cette plage, on renonce donc au centrage exact : les colonnes latérales
+     passent en `auto` et prennent la largeur de leur contenu, le centre reçoit
+     ce qui reste et s'y centre. Le bloc du milieu s'en trouve légèrement décalé
+     à droite du centre de la page, mais le chevauchement devient impossible par
+     construction plutôt que par réglage de tailles. */
+  @media (max-width: 1400px) {
+    .topbar {
+      grid-template-columns: auto 1fr auto;
+    }
+  }
+
+  @media (max-width: 1200px) {
     /* Les trois zones ne tiennent plus sur une ligne : on empile et on
-       centre, plutôt que de laisser les dossiers déborder. */
+       centre, plutôt que de laisser les dossiers déborder. Ce seuil était à
+       640px du temps de Zen Tokyo Zoo ; Rubik Glitch, plus large, épuise la
+       ligne bien plus tôt — et son dessin décalé cesse d'être lisible en
+       dessous d'environ 1rem, on ne peut donc pas la réduire davantage. */
     .topbar {
       grid-template-columns: 1fr;
       row-gap: 0.6rem;

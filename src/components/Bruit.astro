@@ -158,6 +158,21 @@ const animations = `
     opacity: 0.6;
   }
 
+  /* Le même 0.6 ne rend pas la même chose dans les deux modes. Sur fond
+     sombre, le texte clair déborde légèrement sur le fond — l'œil le voit
+     plus gras qu'il n'est. Sur fond clair, l'effet joue en sens inverse et
+     le texte paraît plus fin. À rapport de contraste pourtant identique
+     (2.50:1 de nuit contre 2.52:1 de jour), le flux est donc plus délavé
+     de jour.
+
+     On retire donc complètement l'estompage de jour : le flux prend --dim
+     plein, soit 5.72:1 contre 2.52:1 auparavant. Le caractère « journal qui
+     défile » ne repose plus sur l'opacité mais sur le masque en dégradé de
+     .bruit__fenetre, qui continue d'effacer les lignes aux deux bords. */
+  :root[data-theme='clair'] .bruit__ligne {
+    opacity: 1;
+  }
+
   .bruit__ligne--alerte {
     color: var(--signal);
     opacity: 1;

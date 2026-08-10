@@ -29,15 +29,17 @@
   --voile: rgba(11, 11, 11, 0.85);
 }
 
-/* Variante diurne : l'accent saturé passe sous le seuil de lisibilité
-   sur fond clair, il est donc assombri à teinte égale. */
+/* Variante diurne. Contrairement aux autres thèmes, le fond de page
+   n'est teinté d'aucune couleur — c'est l'objet de « graphite ». La
+   hiérarchie reste la même : page très claire, panneaux en blanc pur,
+   de sorte qu'ils se détachent du fond comme en mode sombre. */
 :root[data-theme='clair'] {
-  --void: #ebebeb;
-  --panel: #f6f6f6;
-  --rule: #d2d2d2;
-  --text: #2b2b2b;
-  --dim: #646464;
+  --void: #f5f5f5;
+  --panel: #ffffff;
+  --rule: #e0e0e0;
+  --text: #1f1f1f;
+  --dim: #606060;
   --signal: #000000;
   --live: #23703a;
-  --voile: rgba(235, 235, 235, 0.85);
+  --voile: rgba(245, 245, 245, 0.85);
 }

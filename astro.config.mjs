@@ -17,16 +17,11 @@ export default defineConfig({
 			fallbacks: ['ui-monospace', 'monospace'],
 		},
 		{
-			// Police display des dossiers de la barre supérieure. Une seule
-			// graisse, et un dessin large : réservée à des étiquettes courtes.
-			provider: fontProviders.google(),
-			name: 'Zen Tokyo Zoo',
-			cssVariable: '--font-zen-tokyo-zoo',
-			fallbacks: ['ui-monospace', 'monospace'],
-		},
-		{
-			// Identité en haut à gauche : lettres décalées, façon signal
-			// corrompu. Ne convient qu'à un mot, jamais à du texte suivi.
+			// Toute la barre supérieure : identité, dossiers et liens de section.
+			// Lettres volontairement décalées, façon signal corrompu. Ne convient
+			// qu'à des étiquettes courtes, jamais à du texte suivi, et devient
+			// illisible en dessous d'environ 1rem — d'où les planchers de clamp
+			// dans Topbar.astro.
 			provider: fontProviders.google(),
 			name: 'Rubik Glitch',
 			cssVariable: '--font-rubik-glitch',

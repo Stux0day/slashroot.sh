@@ -26,15 +26,46 @@
   --voile: rgba(10, 11, 13, 0.85);
 }
 
-/* Variante diurne : les accents saturés passent sous le seuil de
-   lisibilité sur fond clair, ils sont donc assombris à teinte égale. */
+/* Variante diurne.
+
+   Le mode sombre pose du rouge sur du noir : la page est le point le plus
+   sombre et les panneaux remontent vers le lecteur. Le mode clair garde ce
+   relief — page en papier crème, panneaux en blanc pur posés dessus.
+
+   Ce qui rendait ce schéma difficile, c'est qu'une page teintée vire vite
+   au gris terne ou au rosé. Le crème échappe aux deux : il est chaud par le
+   jaune, pas par le rouge, et il est franchement plus foncé que le blanc
+   (ΔE 8.4) sans jamais paraître sale.
+
+   Sur la chaleur, la mesure utile est le a* de Lab (axe vert-rouge), pas
+   l'écart rouge-bleu. Un #f9efeb a un a* de +2.7 : c'est du rose. Le
+   crème ci-dessous a un a* négatif et un b* de +5.6 — il est chaud par le
+   jaune, jamais par le rouge. C'est la différence entre un ivoire et un
+   blush.
+
+   L'accent garde la teinte du mode sombre (0°) et 84 % de saturation.
+   #ff3d3d ne tient pas la lisibilité de jour, mais l'assombrir jusqu'au
+   brique lui ferait perdre son statut de signal : #d42222 est le meilleur
+   compromis, et il tient ses 4.5:1 y compris sur le crème.
+
+   --live reste vert : c'est la couleur d'un état OK sur un terminal, et
+   sa complémentarité avec le rouge est ici volontaire.
+
+   Sur le dosage : le fond est au plus foncé que l'accent autorise. La
+   surface la plus sombre de la page doit tenir 4.5:1 sous #d42222, ce qui
+   place le plancher à ~#f3f0e2 ; #f4f1e4 s'y tient avec 4.58:1, soit une
+   marge mince mais réelle. Descendre plus bas suppose d'assombrir l'accent,
+   donc de le ramener vers le brique — l'échange n'en vaut pas la peine.
+   Tout gain de densité supplémentaire doit venir de --dim et --rule, qui
+   ne portent aucune contrainte : le premier est du texte secondaire, le
+   second un filet décoratif. */
 :root[data-theme='clair'] {
-  --void: #e9ebed;
-  --panel: #f4f5f7;
-  --rule: #ccd1d7;
-  --text: #15181d;
-  --dim: #616a76;
-  --signal: #c52b2b;
+  --void: #f4f1e4;
+  --panel: #ffffff;
+  --rule: #d5cdb4;
+  --text: #1a1815;
+  --dim: #575349;
+  --signal: #d42222;
   --live: #1e7a35;
-  --voile: rgba(233, 235, 237, 0.85);
+  --voile: rgba(244, 241, 228, 0.85);
 }

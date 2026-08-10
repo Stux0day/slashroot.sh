@@ -4,7 +4,6 @@
 // Tu pourras extraire le <head> dans src/layouts/ plus tard.
 
 import { Font } from 'astro:assets';
-import { getCollection, type CollectionEntry } from 'astro:content';
 
 import Bruit from '../components/Bruit.astro';
 import Footer from '../components/Footer.astro';
@@ -12,26 +11,10 @@ import ThemeScript from '../components/ThemeScript.astro';
 import Topbar from '../components/Topbar.astro';
 
 // --- Contenu éditorial : voir src/data/site.ts --------------------------
-import { banniere, identite, stack, travaux } from '../data/site';
+import { banniere, certifs, identite, stack, travaux } from '../data/site';
 
 // Jetons de thème, reset et boutons : source unique.
 import '../styles/global.css';
-
-// --- Articles ------------------------------------------------------------
-let tousLesArticles: CollectionEntry<'blog'>[] = [];
-try {
-  tousLesArticles = await getCollection('blog');
-} catch {
-  tousLesArticles = [];
-}
-
-const parDateDecroissante = (a: CollectionEntry<'blog'>, b: CollectionEntry<'blog'>) =>
-  (b.data.pubDate?.valueOf() ?? 0) - (a.data.pubDate?.valueOf() ?? 0);
-
-const articles = [...tousLesArticles].sort(parDateDecroissante).slice(0, 3);
-
-const formatDate = (d: Date | undefined) =>
-  d ? d.toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
 ---
 
 <!doctype html>
@@ -52,11 +35,10 @@ const formatDate = (d: Date | undefined) =>
       rel="stylesheet"
     />
 
-    {/* Cette page a son propre <head> et ne passe pas par BaseHead : toutes
-        les polices se déclarent donc ici. VT323 pour la bannière, les deux
-        autres pour la barre supérieure. */}
+    {/* Cette page a son propre <head> et ne passe pas par BaseHead : ses
+        polices se déclarent donc ici. VT323 pour la bannière, Rubik Glitch pour
+        la barre supérieure. */}
     <Font cssVariable="--font-vt323" preload />
-    <Font cssVariable="--font-zen-tokyo-zoo" preload />
     <Font cssVariable="--font-rubik-glitch" preload />
 
     <ThemeScript />
@@ -80,8 +62,7 @@ const formatDate = (d: Date | undefined) =>
           </h1>
           <Bruit />
           <div class="hero__actions">
-            <a class="btn btn--primaire" href={`mailto:${identite.email}`}>Me contacter</a>
-            <a class="btn" href="/cv.pdf">Télécharger le CV</a>
+            <a class="btn btn--primaire" href="/cv.pdf">Télécharger le CV</a>
           </div>
         </div>
 
@@ -137,54 +118,42 @@ const formatDate = (d: Date | undefined) =>
         </div>
       </section>
 
-      <!-- ÉCRITS : alimenté par la collection blog -->
+      {/* CERTIFS : trois zones par ligne — année, intitulé, organisme en
+          pastille. La section a d'abord réutilisé la grille clé/valeur du
+          stack, mais celle-ci réserve 12rem à la clé, ce qui creusait un vide
+          entre « 2025 » et le titre, et noyait l'organisme derrière un tiret
+          dans la même coulée de mono. Ici l'intitulé porte l'information et
+          passe en police de titrage ; l'année et l'organisme l'encadrent en
+          chasse fixe, de part et d'autre.
+
+          La section disparaît tant que src/data/site.ts n'en déclare aucune —
+          un bloc vide vaut moins que pas de bloc. */}
       {
-        articles.length > 0 && (
-          <section id="ecrits" class="bloc">
-            <p class="bloc__label"># écrits</p>
+        certifs.length > 0 && (
+          <section id="certifs" class="bloc">
+            <p class="bloc__label"># certifs</p>
             <div class="bloc__corps">
-              <ul class="liste">
-                {articles.map((a) => (
-                  <li>
-                    <a href={`/blog/${a.id}/`}>
-                      <time datetime={a.data.pubDate?.toISOString()}>
-                        {formatDate(a.data.pubDate)}
-                      </time>
-                      <span class="liste__titre">{a.data.title}</span>
-                      <span class="liste__desc">{a.data.description}</span>
-                    </a>
+              <ul class="certifs">
+                {certifs.map((c) => (
+                  <li class="certif">
+                    <span class="certif__annee">{c.annee}</span>
+                    <span class="certif__organisme">{c.organisme}</span>
+                    <span class="certif__intitule">
+                      {c.lien ? (
+                        <a href={c.lien} rel="noopener">
+                          {c.intitule}
+                        </a>
+                      ) : (
+                        c.intitule
+                      )}
+                    </span>
                   </li>
                 ))}
               </ul>
-              <a class="lien-plus" href="/blog/">Tous les articles →</a>
             </div>
           </section>
         )
       }
-
-      <!-- CONTACT -->
-      <section id="contact" class="bloc">
-        <p class="bloc__label"># contact</p>
-        <div class="bloc__corps">
-          <p class="contact__phrase">
-            Une infrastructure à construire, à reprendre ou à fiabiliser ? Écrivez-moi.
-          </p>
-          <dl class="conf">
-            <div class="conf__ligne">
-              <dt>email</dt>
-              <dd><a href={`mailto:${identite.email}`}>{identite.email}</a></dd>
-            </div>
-            <div class="conf__ligne">
-              <dt>github</dt>
-              <dd><a href={identite.github} rel="me noopener">{identite.github}</a></dd>
-            </div>
-            <div class="conf__ligne">
-              <dt>linkedin</dt>
-              <dd><a href={identite.linkedin} rel="me noopener">{identite.linkedin}</a></dd>
-            </div>
-          </dl>
-        </div>
-      </section>
     </main>
 
     <Footer />
@@ -353,70 +322,82 @@ const formatDate = (d: Date | undefined) =>
         color: var(--dim);
       }
 
-      /* ---------- Liste d'articles ---------- */
-      .liste {
+      /* ---------- Certifications ---------- */
+      /* Les colonnes sont portées par la liste, pas par chaque ligne : une
+         grille par <li> se dimensionnerait sur son seul contenu, et la pastille
+         « PeopleCert » décalerait son intitulé par rapport à ceux des lignes
+         « AWS ». C'est la liste qui définit les trois pistes, et chaque ligne
+         s'y raccorde en `subgrid` — ce qui conserve la boîte du <li>, donc son
+         filet de séparation, tout en partageant les colonnes. */
+      .certifs {
+        display: grid;
+        grid-template-columns: auto auto 1fr;
+        column-gap: 1.25rem;
         margin: 0;
         padding: 0;
         list-style: none;
         border-top: 1px solid var(--rule);
       }
 
-      .liste li {
+      /* Les deux métadonnées ouvrent la ligne — année puis organisme — et
+         l'intitulé prend tout le reste. Les pastilles se retrouvent en colonne
+         alignée, ce qui rend les répétitions visibles (trois AWS, deux GCP)
+         sans avoir à regrouper les entrées, et l'année sert de repère
+         chronologique au fer à gauche. */
+      .certif {
+        display: grid;
+        grid-column: 1 / -1;
+        grid-template-columns: subgrid;
+        align-items: center;
+        padding: 0.9rem 0;
         border-bottom: 1px solid var(--rule);
       }
 
-      .liste a {
-        display: grid;
-        grid-template-columns: 11rem 1fr;
-        gap: 0.35rem 1rem;
-        padding: 1.1rem 0;
-        text-decoration: none;
-      }
-
-      .liste time {
+      /* Chiffres à chasse fixe : sans ça, les années ne s'alignent pas
+         verticalement d'une ligne à l'autre dans les polices à chiffres
+         proportionnels. */
+      .certif__annee {
         font-family: var(--mono);
         font-size: 0.78rem;
         color: var(--dim);
+        font-variant-numeric: tabular-nums;
       }
 
-      .liste__titre {
+      /* C'est l'intitulé qui porte l'information, il passe donc en police de
+         titrage plutôt qu'en chasse fixe — le reste de la ligne est du
+         métadonnée et garde le mono. */
+      .certif__intitule {
         font-family: var(--display);
-        font-size: 1.1rem;
+        font-size: 1rem;
         font-weight: 600;
+        line-height: 1.3;
+        color: var(--text);
       }
 
-      .liste__desc {
-        grid-column: 2;
-        font-size: 0.9rem;
-        color: var(--dim);
-      }
-
-      .liste a:hover .liste__titre {
-        color: var(--signal);
-      }
-
-      .lien-plus {
-        display: inline-block;
-        margin-top: 1.5rem;
-        font-family: var(--mono);
-        font-size: 0.82rem;
-        color: var(--dim);
+      .certif__intitule a {
         text-decoration: none;
+        border-bottom: 1px solid var(--rule);
       }
 
-      .lien-plus:hover {
+      .certif__intitule a:hover {
         color: var(--signal);
+        border-color: var(--signal);
       }
 
-      /* ---------- Contact & pied ---------- */
-      .contact__phrase {
-        max-width: 46ch;
-        margin: 0 0 2rem;
-        font-family: var(--display);
-        font-size: clamp(1.35rem, 2.5vw, 1.9rem);
-        font-weight: 600;
-        line-height: 1.25;
-        letter-spacing: -0.01em;
+      /* Même pastille que les tags des travaux : l'organisme est de même
+         nature qu'un tag, il en reprend le dessin. `stretch` plutôt que
+         `start` : la sous-grille donne à la colonne la largeur du plus long
+         organisme, toutes les pastilles la remplissent donc et forment un bord
+         droit net au lieu d'une colonne en dents de scie. Texte centré. */
+      .certif__organisme {
+        justify-self: stretch;
+        padding: 0.2rem 0.55rem;
+        border: 1px solid var(--rule);
+        font-family: var(--mono);
+        font-size: 0.7rem;
+        color: var(--dim);
+        text-align: center;
+        white-space: nowrap;
       }
 
       /* ---------- Adaptatif ---------- */
@@ -432,15 +413,32 @@ const formatDate = (d: Date | undefined) =>
       }
 
       @media (max-width: 640px) {
-        .conf__ligne,
-        .liste a {
+        .conf__ligne {
           grid-template-columns: 1fr;
         }
 
-        .liste__desc {
-          grid-column: 1;
+        /* Trois zones sur une ligne ne tiennent plus : l'année et l'organisme
+           forment un bandeau de métadonnées, l'intitulé passe dessous sur toute
+           la largeur. On sort de la sous-grille — les colonnes n'ont plus à
+           être communes puisqu'il n'y en a plus qu'une. `start` sur la dernière
+           piste évite que la pastille ne soit étirée jusqu'au bord droit. */
+        .certifs {
+          grid-template-columns: 1fr;
         }
 
+        .certif {
+          grid-column: 1;
+          grid-template-columns: auto 1fr;
+          gap: 0.45rem 0.9rem;
+        }
+
+        .certif__organisme {
+          justify-self: start;
+        }
+
+        .certif__intitule {
+          grid-column: 1 / -1;
+        }
       }
 
       @media (prefers-reduced-motion: reduce) {
