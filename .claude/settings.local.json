@@ -14,7 +14,12 @@
       "Bash(grep -v '^\\\\s*$')",
       "Bash(sed -i \"s|signal:'#0d7a6c'|signal:'#0c7063'|\" p3.mjs)",
       "Bash(node c3.mjs)",
-      "Bash(curl -s \"http://localhost:4321/src/styles/global.css\")"
+      "Bash(curl -s \"http://localhost:4321/src/styles/global.css\")",
+      "Bash(npm install *)",
+      "Read(//home/w100567/.vscode-server/**)",
+      "Read(//home/w100567/**)",
+      "Read(//home/w100567/.vscode-server/data/User/**)",
+      "Bash(node -e ' *)"
     ]
   }
 }

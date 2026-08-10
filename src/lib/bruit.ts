@@ -94,6 +94,7 @@ const MESSAGES = [
   'scanning everyone is not targeting anyone',
   '42 is the answer of the life',
   'your password is in the logs',
+  'This one is a doozle !'
 ];
 
 const NUAGE = 'il n’y a pas de nuage, juste l’ordinateur de quelqu’un d’autre';
