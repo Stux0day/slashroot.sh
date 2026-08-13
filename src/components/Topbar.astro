@@ -46,17 +46,26 @@ const enListe = (articles: CollectionEntry<'blog'>[]) => ({
 });
 
 type Sous = { nom: string; articles: CollectionEntry<'blog'>[]; total: number };
-type Ligne = {
+type LigneSimple = {
   prefixe: string;
   libelle: string;
   href?: string;
-  type: 'article' | 'noeud' | 'reste';
+  type: 'article' | 'reste';
 };
+type LigneNoeud = {
+  prefixe: string;
+  libelle: string;
+  type: 'noeud';
+  enfants: LigneSimple[];
+};
+type Ligne = LigneSimple | LigneNoeud;
 
-/** Aplatit un dossier en lignes préfixées par des connecteurs, à la manière
- *  de la commande `tree`. Le connecteur dépend uniquement de la position :
- *  « └─ » pour le dernier élément d'un niveau, « ├─ » sinon ; les enfants
- *  d'un nœud non terminal reçoivent « │ » pour prolonger la verticale. */
+/** Construit les lignes d'un dossier, préfixées par des connecteurs à la
+ *  manière de la commande `tree`. Le connecteur dépend uniquement de la
+ *  position : « └─ » pour le dernier élément d'un niveau, « ├─ » sinon. Un
+ *  sous-dossier porte ses enfants (préfixés « │ » pour prolonger la
+ *  verticale) plutôt que de les aplatir : c'est ce qui permet au gabarit de
+ *  les replier dans un <details>. */
 const construireArbre = (
   racine: { articles: CollectionEntry<'blog'>[]; total: number },
   sousDossiers: Sous[],
@@ -69,45 +78,43 @@ const construireArbre = (
     ...sousDossiers.map((sous) => ({ type: 'noeud' as const, sous })),
   ];
 
-  return entrees.flatMap((entree, i) => {
+  return entrees.map((entree, i): Ligne => {
     const dernier = i === entrees.length - 1;
     const branche = dernier ? '└─ ' : '├─ ';
     const verticale = dernier ? '   ' : '│  ';
 
     if (entree.type === 'article') {
-      return [
-        {
-          prefixe: branche,
-          libelle: entree.article.data.title,
-          href: `/blog/${entree.article.id}/`,
-          type: 'article' as const,
-        },
-      ];
+      return {
+        prefixe: branche,
+        libelle: entree.article.data.title,
+        href: `/blog/${entree.article.id}/`,
+        type: 'article',
+      };
     }
 
     if (entree.type === 'reste') {
-      return [{ prefixe: branche, libelle: `+ ${entree.nombre} autre(s)`, type: 'reste' as const }];
+      return { prefixe: branche, libelle: `+ ${entree.nombre} autre(s)`, type: 'reste' };
     }
 
     const { sous } = entree;
     const tronque = sous.total > sous.articles.length;
 
-    const enfants: Ligne[] = sous.articles.map((article, j) => ({
+    const enfants: LigneSimple[] = sous.articles.map((article, j) => ({
       prefixe: verticale + (!tronque && j === sous.articles.length - 1 ? '└─ ' : '├─ '),
       libelle: article.data.title,
       href: `/blog/${article.id}/`,
-      type: 'article' as const,
+      type: 'article',
     }));
 
     if (tronque) {
       enfants.push({
         prefixe: `${verticale}└─ `,
         libelle: `+ ${sous.total - sous.articles.length} autre(s)`,
-        type: 'reste' as const,
+        type: 'reste',
       });
     }
 
-    return [{ prefixe: branche, libelle: `${sous.nom}/`, type: 'noeud' as const }, ...enfants];
+    return { prefixe: branche, libelle: `${sous.nom}/`, type: 'noeud', enfants };
   });
 };
 
@@ -150,25 +157,58 @@ const dossiers = [...dossiersDeclares, ...nonDeclares].map(({ id, libelle }) => 
     {
       dossiers.map((dossier) => (
         <div class="dossier">
-          {/* Le bouton n'ouvre rien au clic : c'est :hover/:focus-visible
-              qui pilote l'affichage, donc souris, clavier et tactile
-              fonctionnent sans JavaScript. */}
-          <button class="dossier__nom" type="button">{dossier.libelle}</button>
+          {/* Un clic simple n'ouvre rien : c'est :hover/:focus-visible qui
+              pilote l'affichage, donc souris, clavier et tactile fonctionnent
+              sans JavaScript. Le double-clic est la seule action portée par
+              ce bouton : il déplie/replie tous les sous-dossiers d'un coup
+              (voir le script en bas de fichier). */}
+          <button class="dossier__nom" type="button" data-dossier-tout>{dossier.libelle}</button>
           <ul class="dossier__menu">
-            {dossier.lignes.map((ligne) => (
-              <li class={`arbre arbre--${ligne.type}`}>
-                {/* Les connecteurs sont décoratifs : masqués aux lecteurs
-                    d'écran, qui n'ont que faire des caractères de dessin. */}
-                <span class="arbre__branche" aria-hidden="true">
-                  {ligne.prefixe}
-                </span>
-                {ligne.href ? (
-                  <a href={ligne.href}>{ligne.libelle}</a>
-                ) : (
-                  <span class="arbre__libelle">{ligne.libelle}</span>
-                )}
-              </li>
-            ))}
+            {dossier.lignes.map((ligne) =>
+              ligne.type === 'noeud' ? (
+                <li class="arbre-groupe">
+                  {/* <details> ouvre/replie le sous-dossier sans JavaScript ;
+                      le résumé entier reste cliquable, touche Entrée/Espace
+                      comprise au clavier. Fermé par défaut : les sous-dossiers
+                      ne s'affichent qu'à la demande. */}
+                  <details>
+                    <summary class="arbre arbre--noeud">
+                      <span class="arbre__branche" aria-hidden="true">
+                        {ligne.prefixe}
+                      </span>
+                      <span class="arbre__libelle">{ligne.libelle}</span>
+                    </summary>
+                    <ul class="arbre__enfants">
+                      {ligne.enfants.map((enfant) => (
+                        <li class={`arbre arbre--${enfant.type}`}>
+                          <span class="arbre__branche" aria-hidden="true">
+                            {enfant.prefixe}
+                          </span>
+                          {enfant.href ? (
+                            <a href={enfant.href}>{enfant.libelle}</a>
+                          ) : (
+                            <span class="arbre__libelle">{enfant.libelle}</span>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                </li>
+              ) : (
+                <li class={`arbre arbre--${ligne.type}`}>
+                  {/* Les connecteurs sont décoratifs : masqués aux lecteurs
+                      d'écran, qui n'ont que faire des caractères de dessin. */}
+                  <span class="arbre__branche" aria-hidden="true">
+                    {ligne.prefixe}
+                  </span>
+                  {ligne.href ? (
+                    <a href={ligne.href}>{ligne.libelle}</a>
+                  ) : (
+                    <span class="arbre__libelle">{ligne.libelle}</span>
+                  )}
+                </li>
+              ),
+            )}
             {dossier.totalDossier === 0 && (
               <li class="arbre arbre--reste">
                 <span class="arbre__branche" aria-hidden="true">└─ </span>
@@ -394,6 +434,14 @@ const dossiers = [...dossiersDeclares, ...nonDeclares].map(({ id, libelle }) => 
     transition: none;
   }
 
+  /* Un clic en dehors de tous les dossiers (voir le script en bas de
+     fichier) supprime ponctuellement le délai de fermeture : la souris a
+     déjà quitté le dossier à ce moment-là, donc le menu est de toute façon
+     déjà en train de se refermer — seule l'attente d'une seconde change. */
+  .dossier__menu.dossier__menu--fermer-immediat {
+    transition: none;
+  }
+
   /* ---------- Lignes d'arborescence ---------- */
   .arbre {
     display: flex;
@@ -438,6 +486,32 @@ const dossiers = [...dossiersDeclares, ...nonDeclares].map(({ id, libelle }) => 
 
   .arbre--reste .arbre__libelle {
     opacity: 0.7;
+  }
+
+  /* ---------- Sous-dossiers pliables ---------- */
+  /* Pas d'icône visible : le résumé entier reste cliquable, sans marqueur
+     à droite. On masque quand même le triangle natif du <summary>, dont le
+     dessin ne suit pas l'esthétique du reste de la barre. Les deux
+     sélecteurs sont nécessaires : Firefox suit `list-style`, WebKit son
+     propre pseudo-élément. */
+  summary.arbre--noeud {
+    list-style: none;
+    cursor: pointer;
+  }
+
+  summary.arbre--noeud::-webkit-details-marker {
+    display: none;
+  }
+
+  summary.arbre--noeud:hover .arbre__branche,
+  summary.arbre--noeud:focus-visible .arbre__branche {
+    color: var(--signal);
+  }
+
+  .arbre__enfants {
+    margin: 0;
+    padding: 0;
+    list-style: none;
   }
 
   /* ---------- Bascule jour / nuit ---------- */
@@ -553,5 +627,35 @@ const dossiers = [...dossiersDeclares, ...nonDeclares].map(({ id, libelle }) => 
     } catch {
       /* stockage indisponible : la bascule reste valable pour la session */
     }
+  });
+
+  // Double-clic sur le titre du menu = tout déplier/replier d'un coup.
+  // Tout ouvert -> tout replier ; sinon (fermé ou mixte) -> tout déplier.
+  // L'état est relu dans le DOM à chaque double-clic plutôt que mémorisé,
+  // pour rester juste même après un pliage individuel d'un sous-dossier.
+  document.querySelectorAll('[data-dossier-tout]').forEach((bouton) => {
+    bouton.addEventListener('dblclick', () => {
+      const details = [...(bouton.closest('.dossier')?.querySelectorAll('details') ?? [])];
+      const toutOuvert = details.every((d) => d.open);
+      details.forEach((d) => {
+        d.open = !toutOuvert;
+      });
+    });
+  });
+
+  // Un clic hors de tout dossier a déjà fait perdre le survol/focus qui
+  // gardait le menu ouvert ; seul le délai de fermeture (--delai-fermeture)
+  // retarde encore sa disparition. On le court-circuite le temps d'un
+  // repaint, puis on le restitue pour que la fermeture par simple perte de
+  // survol continue de bénéficier de son fondu habituel.
+  document.addEventListener('click', (evenement) => {
+    if (evenement.target instanceof Element && evenement.target.closest('.dossier')) return;
+    const menus = document.querySelectorAll('.dossier__menu');
+    menus.forEach((menu) => menu.classList.add('dossier__menu--fermer-immediat'));
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        menus.forEach((menu) => menu.classList.remove('dossier__menu--fermer-immediat'));
+      });
+    });
   });
 </script>

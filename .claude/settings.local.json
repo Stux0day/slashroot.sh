@@ -19,7 +19,9 @@
       "Read(//home/w100567/.vscode-server/**)",
       "Read(//home/w100567/**)",
       "Read(//home/w100567/.vscode-server/data/User/**)",
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Bash(astro dev *)",
+      "Bash(curl -s -o /tmp/claude-1000/-home-w100567-slashroot-sh/cf68489d-5c23-4a09-9175-25c9bf7d107b/scratchpad/page.html -w \"%{http_code}\\\\n\" http://localhost:4321/)"
     ]
   }
 }
