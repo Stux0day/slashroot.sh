@@ -69,6 +69,7 @@ type Ligne = LigneSimple | LigneNoeud;
 const construireArbre = (
   racine: { articles: CollectionEntry<'blog'>[]; total: number },
   sousDossiers: Sous[],
+  dossierId: string,
 ): Ligne[] => {
   const entrees = [
     ...racine.articles.map((article) => ({ type: 'article' as const, article })),
@@ -93,7 +94,12 @@ const construireArbre = (
     }
 
     if (entree.type === 'reste') {
-      return { prefixe: branche, libelle: `+ ${entree.nombre} autre(s)`, type: 'reste' };
+      return {
+        prefixe: branche,
+        libelle: `+ ${entree.nombre} autre(s)`,
+        href: `/blog/${dossierId}/`,
+        type: 'reste',
+      };
     }
 
     const { sous } = entree;
@@ -144,7 +150,7 @@ const dossiers = [...dossiersDeclares, ...nonDeclares].map(({ id, libelle }) => 
   return {
     id,
     libelle,
-    lignes: construireArbre(enListe(racine), sousDossiers),
+    lignes: construireArbre(enListe(racine), sousDossiers, id),
     totalDossier: entrees.length,
   };
 });
