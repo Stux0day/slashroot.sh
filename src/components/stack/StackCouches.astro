@@ -1,0 +1,140 @@
+---
+// src/components/stack/StackCouches.astro
+//
+// La section « stack » de la page d'accueil : un bloc de strates jointives,
+// un domaine par ligne, ses outils en regard.
+//
+// Elle a d'abord porté un axe vertical légendé « socle » / « surface », et
+// affichait les strates en ordre inverse pour qu'on les lise de bas en haut.
+// L'axe est parti avec le passage à des domaines d'activité : il annonçait un
+// empilement d'architecture que « développement & automatisation » ne décrit
+// plus. L'inversion l'a suivi — sans légende pour l'annoncer, elle ne faisait
+// plus que présenter la liste à l'envers de site.ts sans le dire. L'ordre du
+// document est donc redevenu l'ordre d'affichage.
+//
+// La colonne réservée aux noms a été supprimée puis rétablie. Elle avait
+// disparu quand les compétences n'étaient qu'une coulée de texte : elle
+// creusait alors du vide après les noms courts sans rien aligner d'utile.
+// Elle est revenue avec les pastilles, qui ont besoin d'un bord gauche commun
+// pour former des colonnes plutôt qu'un tas.
+
+import { stack } from '../../data/site';
+---
+
+<section id="stack" class="bloc">
+  <p class="bloc__label"># stack</p>
+  <div class="bloc__corps">
+    <ol class="pile">
+      {
+        stack.map((ligne) => (
+          <li class="couche">
+            <span class="couche__nom">{ligne.domaine}</span><span class="couche__outils">
+              {ligne.outils.map((outil) => (
+                <span class="couche__outil">{outil}</span>
+              ))}
+            </span>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>
+
+<style>
+  /* ---------- Stack : pile de couches ---------- */
+  /* Les deux colonnes sont portées par la pile et non par chaque strate.
+     C'est ce qui permet à la première d'être en `max-content` : elle prend la
+     largeur du plus long nom de domaine une fois pour toutes, et les pastilles
+     de toutes les strates démarrent alors sur la même verticale. Une grille
+     par strate se dimensionnerait sur son seul contenu, et « RÉSEAUX &
+     INTERCONNEXION » décalerait ses compétences par rapport à celles de
+     « SÉCURITÉ & SECRETS ».
+
+     Chaque strate s'y raccorde en `subgrid` — même dispositif que la liste des
+     certifications, qui règle exactement le même problème sur cette page. */
+  .pile {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    column-gap: 1.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border: 1px solid var(--rule);
+    background: var(--panel);
+  }
+
+  /* `baseline` et non `start` : la colonne de droite est une nappe de
+     pastilles, dont la première porte la ligne de base du bloc. Le nom du
+     domaine s'aligne donc sur le texte de la première pastille, et non sur le
+     haut de son cadre — deux corps de police différents ne se calent pas par
+     le sommet. */
+  .couche {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: subgrid;
+    align-items: baseline;
+    padding: 1rem 1.1rem;
+  }
+
+  /* Les strates se touchent — c'est ce qui fait le bloc. Un seul filet entre
+     deux d'entre elles, d'où le `+` : ni au-dessus de la première, ni sous la
+     dernière, la bordure du bloc s'en charge. */
+  .couche + .couche {
+    border-top: 1px solid var(--rule);
+  }
+
+  /* `nowrap` force la colonne `max-content` à s'ouvrir jusqu'au nom le plus
+     long au lieu de le casser en deux. C'est « développement &
+     automatisation » qui fixe seul la largeur de la colonne. */
+  .couche__nom {
+    font-family: var(--display);
+    font-size: 0.92rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--signal);
+  }
+
+  .couche__outils {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  /* Exactement la pastille des certifications et des tags de travaux : même
+     padding, même filet, même corps. Elle rend le séparateur « · » inutile —
+     c'est le cadre qui marque désormais la frontière, y compris pour les noms
+     qui contiennent une espace.
+
+     Seule l'encre diffère : --text là où un tag garde --dim. Une pastille de
+     travaux qualifie un texte voisin et doit s'effacer devant lui ; ici les
+     compétences sont tout le contenu de la section, et quatorze cadres en
+     encre atténuée sur la première ligne la rendraient illisible. */
+  .couche__outil {
+    padding: 0.2rem 0.55rem;
+    border: 1px solid var(--rule);
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    line-height: 1.5;
+    color: var(--text);
+    white-space: nowrap;
+  }
+
+  @media (max-width: 900px) {
+    /* La colonne des noms prend un tiers de la largeur et les pastilles se
+       retrouvent à l'étroit : on sort de la sous-grille, le domaine repasse
+       au-dessus de sa nappe. L'alignement vertical disparaît, mais il n'avait
+       de sens que tant que les strates se lisaient en regard. */
+    .pile {
+      grid-template-columns: 1fr;
+    }
+
+    .couche {
+      grid-column: 1;
+      grid-template-columns: 1fr;
+      gap: 0.55rem;
+    }
+  }
+
+</style>

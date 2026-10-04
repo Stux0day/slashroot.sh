@@ -7,11 +7,15 @@ import { Font } from 'astro:assets';
 
 import Bruit from '../components/Bruit.astro';
 import Footer from '../components/Footer.astro';
+// La section stack, sortie de cette page parce qu'elle a beaucoup bougé et
+// qu'elle a son propre CSS. Elle rend elle-même sa <section id="stack">, avec
+// l'étiquette et l'ancre visée par la barre du haut.
+import Stack from '../components/stack/StackCouches.astro';
 import ThemeScript from '../components/ThemeScript.astro';
 import Topbar from '../components/Topbar.astro';
 
 // --- Contenu éditorial : voir src/data/site.ts --------------------------
-import { banniere, certifs, identite, stack, travaux } from '../data/site';
+import { banniere, certifs, identite, travaux } from '../data/site';
 
 // Jetons de thème, reset et boutons : source unique.
 import '../styles/global.css';
@@ -79,22 +83,7 @@ import '../styles/global.css';
         </div>
       </section>
 
-      <!-- STACK : structure clé/valeur, comme un fichier de configuration -->
-      <section id="stack" class="bloc">
-        <p class="bloc__label"># stack</p>
-        <div class="bloc__corps">
-          <dl class="conf">
-            {
-              stack.map((ligne) => (
-                <div class="conf__ligne">
-                  <dt>{ligne.cle}</dt>
-                  <dd>{ligne.valeur}</dd>
-                </div>
-              ))
-            }
-          </dl>
-        </div>
-      </section>
+      <Stack />
 
       <!-- TRAVAUX -->
       <section id="travaux" class="bloc">
@@ -119,12 +108,14 @@ import '../styles/global.css';
       </section>
 
       {/* CERTIFS : trois zones par ligne — année, intitulé, organisme en
-          pastille. La section a d'abord réutilisé la grille clé/valeur du
-          stack, mais celle-ci réserve 12rem à la clé, ce qui creusait un vide
-          entre « 2025 » et le titre, et noyait l'organisme derrière un tiret
-          dans la même coulée de mono. Ici l'intitulé porte l'information et
-          passe en police de titrage ; l'année et l'organisme l'encadrent en
-          chasse fixe, de part et d'autre.
+          pastille. La section a d'abord réutilisé la grille clé/valeur qui
+          servait alors au stack, mais celle-ci réservait 12rem à la clé, ce
+          qui creusait un vide entre « 2025 » et le titre, et noyait
+          l'organisme derrière un tiret dans la même coulée de mono. D'où la
+          sous-grille. Ici
+          l'intitulé porte l'information et passe en police de titrage ;
+          l'année et l'organisme l'encadrent en chasse fixe, de part et
+          d'autre.
 
           La section disparaît tant que src/data/site.ts n'en déclare aucune —
           un bloc vide vaut moins que pas de bloc. */}
@@ -212,63 +203,6 @@ import '../styles/global.css';
         flex-wrap: wrap;
         gap: 0.75rem;
         margin-top: 2rem;
-      }
-
-      /* ---------- Blocs de section ---------- */
-      .bloc {
-        display: grid;
-        grid-template-columns: var(--rail) 1fr;
-        gap: 2rem;
-        padding: clamp(2.5rem, 6vw, 4.5rem) var(--marge);
-        border-bottom: 1px solid var(--rule);
-      }
-
-      .bloc__label {
-        margin: 0;
-        font-family: var(--mono);
-        font-size: 0.78rem;
-        color: var(--signal);
-      }
-
-      .bloc__corps {
-        min-width: 0;
-      }
-
-      /* ---------- Lignes de configuration ---------- */
-      .conf {
-        margin: 0;
-        border-top: 1px solid var(--rule);
-      }
-
-      .conf__ligne {
-        display: grid;
-        grid-template-columns: 12rem 1fr;
-        gap: 1rem;
-        padding: 0.85rem 0;
-        border-bottom: 1px solid var(--rule);
-      }
-
-      .conf dt {
-        font-family: var(--mono);
-        font-size: 0.82rem;
-        color: var(--dim);
-      }
-
-      .conf dd {
-        margin: 0;
-        font-family: var(--mono);
-        font-size: 0.85rem;
-      }
-
-      .conf dd a {
-        color: var(--text);
-        text-decoration: none;
-        border-bottom: 1px solid var(--rule);
-      }
-
-      .conf dd a:hover {
-        color: var(--signal);
-        border-color: var(--signal);
       }
 
       /* ---------- Panneaux de travaux ---------- */
@@ -405,18 +339,9 @@ import '../styles/global.css';
         .hero {
           grid-template-columns: 1fr;
         }
-
-        .bloc {
-          grid-template-columns: 1fr;
-          gap: 1.25rem;
-        }
       }
 
       @media (max-width: 640px) {
-        .conf__ligne {
-          grid-template-columns: 1fr;
-        }
-
         /* Trois zones sur une ligne ne tiennent plus : l'année et l'organisme
            forment un bandeau de métadonnées, l'intitulé passe dessous sur toute
            la largeur. On sort de la sous-grille — les colonnes n'ont plus à

@@ -8,6 +8,7 @@ import Footer from '../../../components/Footer.astro';
 import FormattedDate from '../../../components/FormattedDate.astro';
 import Topbar from '../../../components/Topbar.astro';
 import { dossiers as dossiersDeclares } from '../../../data/site';
+import { parOrdreDAffichage } from '../../../lib/tri';
 
 export async function getStaticPaths() {
 	const articles = await getCollection('blog');
@@ -18,7 +19,7 @@ export async function getStaticPaths() {
 		props: {
 			articles: articles
 				.filter((article) => article.id.split('/')[0] === dossier)
-				.sort((a, b) => (b.data.pubDate?.valueOf() ?? 0) - (a.data.pubDate?.valueOf() ?? 0)),
+				.sort(parOrdreDAffichage),
 		},
 	}));
 }

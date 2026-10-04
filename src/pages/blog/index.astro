@@ -6,10 +6,9 @@ import Footer from '../../components/Footer.astro';
 import FormattedDate from '../../components/FormattedDate.astro';
 import Topbar from '../../components/Topbar.astro';
 import { SITE_DESCRIPTION, SITE_TITLE } from '../../consts';
+import { parOrdreDAffichage } from '../../lib/tri';
 
-const posts = (await getCollection('blog')).sort(
-	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
-);
+const posts = (await getCollection('blog')).sort(parOrdreDAffichage);
 ---
 
 <!doctype html>

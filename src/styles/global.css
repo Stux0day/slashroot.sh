@@ -14,7 +14,7 @@
 
    Doit rester en première ligne : un @import placé après d'autres règles
    est ignoré par la spécification CSS. */
-@import './themes/rouge.css';
+@import './themes/indigo.css';
 
 /* Jetons de design + reset + primitives réellement partagées.
    Tout ce qui est spécifique à un composant reste dans son <style> scopé. */
@@ -84,6 +84,38 @@ a {
 .btn--primaire:hover {
   background: var(--signal);
   color: var(--void);
+}
+
+/* ---------- Blocs de section ----------
+   Le gabarit d'une section : un rail à gauche pour l'étiquette « # stack »,
+   le corps à droite. Ici et non dans le <style> d'index.astro, parce que les
+   sections de l'accueil sont pour partie des composants (StackCouches) qui ne
+   peuvent pas atteindre les styles scopés de la page qui les appelle. */
+.bloc {
+  display: grid;
+  grid-template-columns: var(--rail) 1fr;
+  gap: 2rem;
+  padding: clamp(2.5rem, 6vw, 4.5rem) var(--marge);
+  border-bottom: 1px solid var(--rule);
+}
+
+.bloc__label {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--signal);
+}
+
+.bloc__corps {
+  min-width: 0;
+}
+
+/* Le rail ne tient plus : l'étiquette repasse au-dessus du corps. */
+@media (max-width: 900px) {
+  .bloc {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
 }
 
 /* ---------- Signature : le bloc unit ----------

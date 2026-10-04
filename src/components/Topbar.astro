@@ -6,6 +6,7 @@
 // page d'article, une ancre nue ne mènerait nulle part.
 import { type CollectionEntry, getCollection } from 'astro:content';
 import { certifs, dossiers as dossiersDeclares, identite } from '../data/site';
+import { parOrdreDAffichage } from '../lib/tri';
 
 let tousLesArticles: CollectionEntry<'blog'>[] = [];
 try {
@@ -13,9 +14,6 @@ try {
 } catch {
   tousLesArticles = [];
 }
-
-const parDateDecroissante = (a: CollectionEntry<'blog'>, b: CollectionEntry<'blog'>) =>
-  (b.data.pubDate?.valueOf() ?? 0) - (a.data.pubDate?.valueOf() ?? 0);
 
 // Deux niveaux sont lus dans l'arborescence de src/content/blog :
 //   os/article.md         -> branche directe du menu _OS
@@ -39,9 +37,11 @@ const regrouperPar = (articles: CollectionEntry<'blog'>[], indice: number) =>
     return acc;
   }, new Map<string, CollectionEntry<'blog'>[]>());
 
-/** Trie par date et coupe à MAX_PAR_LISTE, en gardant le compte total. */
+/** Trie (voir src/lib/tri.ts) et coupe à MAX_PAR_LISTE, en gardant le compte
+ *  total. Les articles écartés restent atteignables par la ligne
+ *  « + n autre(s) » : un `ordre` élevé n'enterre donc rien, il repousse. */
 const enListe = (articles: CollectionEntry<'blog'>[]) => ({
-  articles: [...articles].sort(parDateDecroissante).slice(0, MAX_PAR_LISTE),
+  articles: [...articles].sort(parOrdreDAffichage).slice(0, MAX_PAR_LISTE),
   total: articles.length,
 });
 
@@ -65,18 +65,26 @@ type Ligne = LigneSimple | LigneNoeud;
  *  position : « └─ » pour le dernier élément d'un niveau, « ├─ » sinon. Un
  *  sous-dossier porte ses enfants (préfixés « │ » pour prolonger la
  *  verticale) plutôt que de les aplatir : c'est ce qui permet au gabarit de
- *  les replier dans un <details>. */
+ *  les replier dans un <details>.
+ *
+ *  Trois blocs, dans cet ordre : les sous-dossiers, puis les articles posés à
+ *  la racine, puis la ligne de débordement. Les sous-dossiers passent devant
+ *  parce qu'ils portent la structure du dossier — repliés, ils ne coûtent
+ *  qu'une ligne chacun, alors qu'ils contiennent l'essentiel des articles.
+ *  Cet ordre place aussi « + n autre(s) » en toute fin de menu, seule position
+ *  où une ligne de débordement ait un sens : elle clôt la liste qu'elle
+ *  tronque au lieu de s'intercaler au milieu. */
 const construireArbre = (
   racine: { articles: CollectionEntry<'blog'>[]; total: number },
   sousDossiers: Sous[],
   dossierId: string,
 ): Ligne[] => {
   const entrees = [
+    ...sousDossiers.map((sous) => ({ type: 'noeud' as const, sous })),
     ...racine.articles.map((article) => ({ type: 'article' as const, article })),
     ...(racine.total > racine.articles.length
       ? [{ type: 'reste' as const, nombre: racine.total - racine.articles.length }]
       : []),
-    ...sousDossiers.map((sous) => ({ type: 'noeud' as const, sous })),
   ];
 
   return entrees.map((entree, i): Ligne => {

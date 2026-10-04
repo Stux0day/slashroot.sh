@@ -223,9 +223,13 @@ const sommaire = headings.filter((h) => h.depth === 2 || h.depth === 3);
 		border-bottom: 1px solid var(--rule);
 	}
 
+	/* Même --signal que les titres de section plus bas : l'article est alors
+	   coloré de bout en bout par le seul accent du thème, du titre principal
+	   au moindre h4. Le blanc que portait ce h1 en faisait le seul élément de
+	   la page à ne pas suivre cette règle. */
 	.entete h1 {
 		margin: 0;
-		color: var(--text);
+		color: var(--signal);
 		font-family: var(--display);
 		font-weight: 700;
 		font-size: clamp(1.9rem, 4vw, 2.8rem);
@@ -269,11 +273,26 @@ const sommaire = headings.filter((h) => h.depth === 2 || h.depth === 3);
 		line-height: 1.75;
 	}
 
+	/* Les titres de section prennent --signal, l'accent du thème actif : c'est
+	   la seule couleur du site, et elle change avec le thème sans que rien ne
+	   soit à retoucher ici.
+
+	   Le corps de l'article est en --dim et le gras en --text : les titres
+	   passent donc devant les deux, et le repérage dans un article long se
+	   fait à la couleur avant de se faire à la taille. C'est aussi ce qui
+	   raccorde le corps d'un article à sa fiche technique en tête de page,
+	   dont les étiquettes sont déjà en --signal.
+
+	   Attention, les liens du corps portent la même couleur (règle plus bas).
+	   Ils s'en distinguent par la police — chasse variable de titrage contre
+	   texte courant — et par la position, un titre étant toujours seul sur sa
+	   ligne. Si la confusion se produit à l'usage, c'est le lien qu'il faudra
+	   souligner, pas le titre qu'il faudra décolorer. */
 	.prose :global(h2),
 	.prose :global(h3),
 	.prose :global(h4) {
 		margin: 2.5rem 0 0.75rem;
-		color: var(--text);
+		color: var(--signal);
 		font-family: var(--display);
 		line-height: 1.25;
 		/* Décale l'ancre sous la barre collante quand on vient du sommaire. */

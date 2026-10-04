@@ -50,16 +50,100 @@ export const identite = {
   linkedin: 'https://www.linkedin.com/in/th%C3%A9ophile-garin-%F0%9F%90%A7-58564a138/',
 } as const;
 
-export const stack: LigneConf[] = [
-  { cle: 'systèmes', valeur: 'RHEL 9, Debian, systemd, WSL' },
-  { cle: 'cloud / iac', valeur: 'GCP, Terraform, modules & workspaces' },
-  { cle: 'secrets', valeur: 'OpenBao, HashiCorp Vault, PKI' },
-  { cle: 'observabilité', valeur: 'Zabbix, Telegraf, InfluxDB' },
-  { cle: 'automatisation', valeur: 'Bash, PowerShell, Go, Python' },
-  { cle: 'réseau', valeur: 'HAProxy, TLS, reverse proxy, VPN' },
-];
+/** Une ligne de la section « stack » : un domaine, et les outils qu'on y
+ *  emploie. Chaque outil est une entrée du tableau et non un fragment d'une
+ *  chaîne séparée par des virgules — c'est ce qui permet à la page d'en
+ *  dessiner une pastille par outil sans avoir à redécouper du texte, et ce qui
+ *  évite qu'un nom contenant lui-même une virgule ne se scinde en deux. */
+export interface LigneStack {
+  domaine: string;
+  outils: string[];
+}
 
-/** Liens affichés dans le pied de page. `cle` sert aussi de clé de logo côté
+/** Cinq domaines, nommés dans le vocabulaire du métier — celui qu'un lecteur
+ *  cherche et qu'un moteur indexe. On a essayé des verbes, des métaphores et
+ *  des chemins Unix ; ils disaient plus, mais aucun ne se serait retrouvé dans
+ *  une offre d'emploi.
+ *
+ *  DEUX RÈGLES pour les entrées :
+ *
+ *  1. Pas de numéro de version. « RHEL 9 » devient « RHEL » : une version
+ *     périme la page toute seule, et personne ne recrute sur un chiffre.
+ *     La version se dit en entretien, ou dans un article du blog.
+ *
+ *  2. Une entrée = quelque chose sur quoi on peut être interrogé. Cela
+ *     exclut les sous-fonctions d'un produit — « modules & workspaces » ne
+ *     veut rien dire sans Terraform juste à côté. Cela garde en revanche les
+ *     compétences qui ne portent pas de nom de produit : PKI, TLS, CI/CD
+ *     sont des sujets d'entretien à part entière.
+ *
+ *  L'ORDRE de cette liste est l'ordre d'affichage, de haut en bas. Il ne suit
+ *  aucune logique technique : il va du domaine le plus large au plus étroit,
+ *  donc du plus susceptible d'intéresser un lecteur au moins. Les réseaux
+ *  ferment la marche, avec leurs deux entrées.
+ *
+ *  LE DÉSÉQUILIBRE EST CONNU : le premier domaine porte quatorze entrées sur
+ *  vingt-cinq, les trois autres se partagent le reste. C'est le prix de la
+ *  fusion infrastructure/exploitation, et c'est un vrai prix — une catégorie
+ *  qui contient plus de la moitié du tout ne trie plus grand-chose. Si la
+ *  première ligne finit par peser trop lourd à l'œil, c'est elle qu'il faut
+ *  rouvrir en deux, pas les autres qu'il faut gonfler.
+ *
+ *  LISTE PRÉCÉDENTE, si tu veux redonner à l'exploitation sa propre ligne :
+ *    { domaine: 'infrastructure', outils: ['Linux', 'RHEL', 'Debian', 'systemd', 'HAProxy', 'TLS', 'AWS', 'GCP', 'OVH'] },
+ *    { domaine: 'réseaux & interconnexion', outils: ['Cisco', 'VPN'] },
+ *    { domaine: 'sécurité & secrets', outils: ['OpenBao', 'Vault', 'PKI'] },
+ *    { domaine: 'développement & automatisation', outils: ['Bash', 'Python', 'Go', 'Terraform', 'Git', 'CI/CD'] },
+ *    { domaine: 'exploitation', outils: ['Zabbix', 'Telegraf', 'InfluxDB', 'JMX', 'ITIL'] },
+ */
+export const stack: LigneStack[] = [
+  // « infrastructure » couvre à la fois les machines et le cloud : c'est le
+  // seul mot qui dispense de trancher entre un serveur qu'on installe et une
+  // instance qu'on provisionne, distinction qui n'intéresse plus grand monde.
+  // « exploitation » lui est adjoint parce que tenir un parc et le surveiller
+  // sont le même métier — Zabbix et Telegraf s'installent et se maintiennent
+  // comme le reste, et ITIL décrit la façon de s'en servir.
+  // HAProxy et TLS sont ici plutôt qu'avec les réseaux — un démon qu'on
+  // installe et supervise, des certificats qu'on émet et qu'on renouvelle :
+  // du travail de système. Le blog dit déjà la même chose, son article sur
+  // les certificats étant rangé dans le dossier « systeme ».
+  {
+    domaine: 'infrastructure & exploitation',
+    outils: [
+      'Linux',
+      'RHEL',
+      'Debian',
+      'systemd',
+      'HAProxy',
+      'TLS',
+      'AWS',
+      'GCP',
+      'OVH',
+      'Zabbix',
+      'Telegraf',
+      'InfluxDB',
+      'JMX',
+      'ITIL',
+    ],
+  },
+  // Un seul domaine et non deux : séparer « développement » d'« automatisation »
+  // obligerait à trancher où va Bash, qui est les deux à la fois.
+  {
+    domaine: 'développement & automatisation',
+    outils: ['Bash', 'Python', 'Go', 'Terraform', 'Git', 'CI/CD'],
+  },
+  // « secrets » n'est pas un synonyme de sécurité, c'est ce que ces trois
+  // outils font précisément : un coffre, son fork, et l'autorité qui signe.
+  // C'est aussi le mot que tu emploies déjà dans tes travaux, dont le premier
+  // s'intitule « Gestion de secrets en haute disponibilité » — un lecteur qui
+  // descend la page retrouve le même terme deux fois.
+  { domaine: 'sécurité & secrets', outils: ['OpenBao', 'Vault', 'PKI'] },
+  // « interconnexion » couvre les deux entrées d'un seul mot : ce que Cisco
+  // relie à l'intérieur d'un site, ce qu'un VPN relie entre plusieurs. Le
+  // domaine reste à deux outils, et c'est assumé — il dit une compétence que
+  // les autres ne recouvrent pas, la fondre ailleurs la ferait disparaître.
+  { domaine: 'réseaux & interconnexion', outils: ['Cisco', 'OpenVPN', 'STP', 'vLAN', 'RIP'] },
+];/** Liens affichés dans le pied de page. `cle` sert aussi de clé de logo côté
  *  Footer.astro : n'y mettre que 'github' ou 'linkedin' tant qu'aucune autre
  *  icône n'y est déclarée. `identite.email` reste défini plus haut mais n'est
  *  plus affiché nulle part — il est là si tu veux le remettre un jour. */
