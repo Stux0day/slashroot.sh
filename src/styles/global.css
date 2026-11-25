@@ -14,7 +14,7 @@
 
    Doit rester en première ligne : un @import placé après d'autres règles
    est ignoré par la spécification CSS. */
-@import './themes/indigo.css';
+@import './themes/rouge.css';
 
 /* Jetons de design + reset + primitives réellement partagées.
    Tout ce qui est spécifique à un composant reste dans son <style> scopé. */
