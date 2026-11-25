@@ -1,0 +1,302 @@
+/* ==========================================================================
+   Prose : le contenu Markdown des articles, rendu dans <div class="prose">.
+   Importé par src/layouts/ArticleLayout.astro uniquement.
+   ========================================================================== */
+
+/* La taille grandit avec l'écran, et la largeur de colonne est exprimée en
+   caractères (ch) : sur un grand écran, la colonne s'élargit avec le texte
+   sans dépasser ~70 caractères par ligne, la limite du confort de lecture. */
+.prose {
+	min-width: 0;
+	max-width: 70ch;
+	font-size: clamp(1.0625rem, 0.9rem + 0.3vw, 1.3rem);
+	line-height: 1.72;
+}
+
+/* Rythme vertical : l'espace vient de l'élément suivant, jamais du précédent. */
+.prose > * + * {
+	margin-top: 1.25em;
+}
+
+.prose > :first-child {
+	margin-top: 0;
+}
+
+/* ---------- Titres ------------------------------------------------------- */
+
+.prose :is(h1, h2, h3, h4, h5, h6) {
+	margin-top: 2.4em;
+	line-height: 1.2;
+	/* Une ancre suivie depuis le sommaire ne doit pas finir sous la barre. */
+	scroll-margin-top: calc(var(--barre) + 1.5rem);
+}
+
+/* Un h1 dans le corps (certains articles en ont) prend la taille d'un h2 :
+   le titre de la page reste le seul vrai titre principal. */
+.prose :is(h1, h2) {
+	padding-top: 0.85em;
+	border-top: 2px solid var(--encre);
+	font-size: 1.55em;
+	font-variation-settings: var(--etire-mi);
+	font-weight: 800;
+	letter-spacing: -0.02em;
+}
+
+.prose h3 {
+	font-size: 1.22em;
+	font-weight: 700;
+}
+
+.prose h4 {
+	font-size: 1.05em;
+	font-weight: 700;
+}
+
+.prose :is(h5, h6) {
+	font-family: var(--police-mono);
+	font-size: var(--t-xs);
+	font-weight: 600;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--encre-2);
+}
+
+.prose > :is(h1, h2, h3, h4, h5, h6) + * {
+	margin-top: 0.8em;
+}
+
+/* ---------- Texte -------------------------------------------------------- */
+
+.prose a {
+	color: var(--accent-texte);
+	text-decoration-line: underline;
+	text-decoration-thickness: 1px;
+	text-underline-offset: 0.18em;
+}
+
+.prose a:hover {
+	text-decoration-thickness: 2px;
+}
+
+.prose strong {
+	font-weight: 700;
+}
+
+.prose :is(ul, ol) {
+	padding-left: 1.35em;
+}
+
+.prose ul {
+	list-style: square;
+}
+
+.prose li + li,
+.prose li > :is(ul, ol) {
+	margin-top: 0.45em;
+}
+
+.prose li::marker {
+	color: var(--accent-texte);
+}
+
+.prose ol > li::marker {
+	font-family: var(--police-mono);
+	font-size: 0.85em;
+	font-weight: 600;
+}
+
+.prose blockquote {
+	padding: 0.15em 0 0.15em 1.25em;
+	border-left: 3px solid var(--accent);
+	color: var(--encre-2);
+}
+
+.prose blockquote > * + * {
+	margin-top: 0.75em;
+}
+
+.prose hr {
+	margin-block: 3em;
+	border: 0;
+	border-top: 1px solid var(--filet);
+}
+
+.prose mark {
+	padding: 0 0.15em;
+	background: var(--accent-voile);
+	color: inherit;
+}
+
+.prose abbr[title] {
+	text-decoration: underline dotted;
+	cursor: help;
+}
+
+.prose kbd {
+	padding: 0.1em 0.45em;
+	border: 1px solid var(--filet);
+	border-bottom-width: 2px;
+	background: var(--code-fond);
+	font-size: 0.8em;
+	white-space: nowrap;
+}
+
+.prose :is(sub, sup) {
+	line-height: 0;
+}
+
+/* ---------- Images ------------------------------------------------------- */
+
+.prose img {
+	margin-inline: auto;
+	border: 1px solid var(--filet);
+	background: var(--papier-2);
+}
+
+/* Une image seule dans son paragraphe (cas de toutes les captures) respire
+   davantage qu'un paragraphe de texte. */
+.prose > p:has(> img:only-child) {
+	margin-block: 2em;
+}
+
+/* ---------- Code --------------------------------------------------------- */
+
+.prose :not(pre) > code {
+	padding: 0.12em 0.4em;
+	background: var(--papier-2);
+	font-size: 0.86em;
+	overflow-wrap: anywhere;
+}
+
+/* Bloc de code : une bande d'en-tête est réservée en haut (padding-top) pour
+   le langage et le bouton « Copier ». Elle existe avant le chargement du
+   script, ce qui évite tout décalage de mise en page. */
+.prose pre {
+	position: relative;
+	margin-block: 1.75em;
+	padding: 2.85rem 1.25rem 1.25rem;
+	overflow-x: auto;
+	border: 1px solid var(--filet);
+	border-top: 2px solid var(--encre);
+	background: var(--code-fond);
+	font-size: 0.84rem;
+	line-height: 1.65;
+	tab-size: 4;
+}
+
+.prose pre::before {
+	content: attr(data-language);
+	position: absolute;
+	top: 0.85rem;
+	left: 1.25rem;
+	font-family: var(--police-mono);
+	font-size: var(--t-xs);
+	font-weight: 500;
+	line-height: 1;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--encre-3);
+}
+
+.prose pre[data-language='plaintext']::before {
+	content: 'texte';
+}
+
+.prose pre code {
+	display: block;
+	width: max-content;
+	min-width: 100%;
+	font-size: inherit;
+}
+
+/* Couleurs de Shiki : un thème par mode (voir astro.config.mjs). */
+.prose .astro-code span {
+	color: light-dark(var(--shiki-light), var(--shiki-dark));
+}
+
+/* Enveloppe et bouton posés par le script de src/layouts/ArticleLayout.astro. */
+.bloc-code {
+	position: relative;
+}
+
+.bloc-code > pre {
+	margin-block: 0;
+}
+
+.prose > .bloc-code {
+	margin-block: 1.75em;
+}
+
+.copier {
+	position: absolute;
+	top: 0.45rem;
+	right: 0.5rem;
+	min-height: 2rem;
+	padding: 0 0.7rem;
+	border: 1px solid var(--filet);
+	background: var(--code-fond);
+	font-family: var(--police-mono);
+	font-size: var(--t-xs);
+	font-weight: 500;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: var(--encre-2);
+	transition:
+		background-color var(--duree) var(--courbe),
+		color var(--duree) var(--courbe);
+}
+
+/* Zone tactile agrandie au-delà du cadre visible. */
+.copier::after {
+	content: '';
+	position: absolute;
+	inset: -0.4rem;
+}
+
+.copier:hover {
+	background: var(--encre);
+	color: var(--papier);
+}
+
+.copier[data-etat='ok'] {
+	border-color: var(--accent-texte);
+	color: var(--accent-texte);
+}
+
+/* ---------- Tableaux ----------------------------------------------------- */
+
+.prose table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 0.9em;
+	font-variant-numeric: tabular-nums;
+	line-height: 1.5;
+}
+
+.prose :is(th, td) {
+	padding: 0.65em 0.9em 0.65em 0;
+	border-bottom: 1px solid var(--filet);
+	text-align: left;
+	vertical-align: top;
+	overflow-wrap: anywhere;
+}
+
+.prose th {
+	border-bottom: 2px solid var(--encre);
+	font-family: var(--police-mono);
+	font-size: var(--t-xs);
+	font-weight: 600;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--encre-2);
+}
+
+/* ---------- Notes de bas de page ------------------------------------------ */
+
+.prose .footnotes {
+	margin-top: 3em;
+	padding-top: 1em;
+	border-top: 1px solid var(--filet);
+	color: var(--encre-2);
+	font-size: 0.9em;
+}

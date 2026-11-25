@@ -1,0 +1,85 @@
+---
+// En-tête d'une section : filet épais, numéro, titre élargi et, à droite,
+// une note ou un lien. Calé sur la grille de 12 colonnes du site.
+import Icon from './Icon.astro';
+import Tiret from './Tiret.astro';
+
+interface Props {
+	numero: string;
+	titre: string;
+	/** id du <h2>, cible d'un aria-labelledby. */
+	id?: string;
+	note?: string;
+	lien?: { href: string; texte: string };
+}
+
+const { numero, titre, id, note, lien } = Astro.props;
+---
+
+<header class="titre-section">
+	<span class="titre-section__numero etiquette" aria-hidden="true">{numero}</span>
+	<h2 class="titre-section__titre" id={id}><Tiret texte={titre} /></h2>
+	{
+		(note || lien) && (
+			<p class="titre-section__aside">
+				{note && <span class="etiquette">{note}</span>}
+				{lien && (
+					<a class="lien-fleche" href={lien.href}>
+						{lien.texte}
+						<Icon nom="fleche-droite" taille={16} />
+					</a>
+				)}
+			</p>
+		)
+	}
+</header>
+
+<style>
+	.titre-section {
+		display: grid;
+		grid-template-columns: repeat(12, minmax(0, 1fr));
+		column-gap: var(--colonnes-gap);
+		row-gap: 0.75rem;
+		align-items: baseline;
+		margin-bottom: clamp(2rem, 4vw, 3.5rem);
+		padding-top: 1rem;
+		border-top: 2px solid var(--encre);
+	}
+
+	.titre-section__numero {
+		grid-column: 1 / span 2;
+		color: var(--accent-texte);
+	}
+
+	.titre-section__titre {
+		grid-column: 3 / span 6;
+		font-size: var(--t-2xl);
+		font-variation-settings: var(--etire);
+		font-weight: 800;
+		line-height: 1;
+		letter-spacing: -0.025em;
+	}
+
+	.titre-section__aside {
+		display: flex;
+		flex-wrap: wrap;
+		grid-column: 9 / -1;
+		justify-content: flex-end;
+		align-items: baseline;
+		gap: 0.5rem 1.5rem;
+		text-align: right;
+	}
+
+	@media (max-width: 48rem) {
+		.titre-section__numero,
+		.titre-section__titre,
+		.titre-section__aside {
+			grid-column: 1 / -1;
+		}
+
+		.titre-section__aside {
+			justify-content: flex-start;
+			text-align: left;
+		}
+	}
+</style>

@@ -1,0 +1,70 @@
+---
+// Contenu du <head>, commun à toutes les pages : métadonnées, polices et choix
+// du thème avant le premier affichage.
+import type { ImageMetadata } from 'astro';
+import { Font, getImage } from 'astro:assets';
+import { SITE_TITLE } from '../consts';
+
+interface Props {
+	title: string;
+	description: string;
+	/** Image de partage (réseaux sociaux). Omise si absente. */
+	image?: ImageMetadata;
+	type?: 'website' | 'article';
+}
+
+const { title, description, image, type = 'website' } = Astro.props;
+
+const canonique = new URL(Astro.url.pathname, Astro.site);
+const imagePartage = image
+	? new URL((await getImage({ src: image, width: 1200, format: 'jpg' })).src, Astro.site)
+	: undefined;
+---
+
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>{title}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonique} />
+<meta name="generator" content={Astro.generator} />
+
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="sitemap" href="/sitemap-index.xml" />
+<link rel="alternate" type="application/rss+xml" title={SITE_TITLE} href={new URL('rss.xml', Astro.site)} />
+
+<meta name="theme-color" content="#f4f2ec" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#2e2d2a" media="(prefers-color-scheme: dark)" />
+
+<meta property="og:type" content={type} />
+<meta property="og:site_name" content={SITE_TITLE} />
+<meta property="og:url" content={canonique} />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:locale" content="fr_FR" />
+{imagePartage && <meta property="og:image" content={imagePartage} />}
+<meta name="twitter:card" content={imagePartage ? 'summary_large_image' : 'summary'} />
+
+{/* Seule la coupe droite d'Archivo est préchargée : c'est elle qui affiche
+    le haut de chaque page. L'italique et la chasse fixe arrivent ensuite. */}
+<Font cssVariable="--font-archivo" preload={[{ subset: 'latin', style: 'normal' }]} />
+<Font cssVariable="--font-jetbrains-mono" />
+
+<script is:inline>
+	// Bloquant et en ligne : appliqué avant la première peinture, il évite un
+	// éclair du mauvais thème. Sans choix enregistré, rien n'est forcé et le
+	// navigateur suit la préférence du système (voir tokens.css).
+	(() => {
+		const racine = document.documentElement;
+		racine.classList.add('js');
+		let choix = null;
+		try {
+			choix = localStorage.getItem('theme');
+		} catch {
+			/* stockage indisponible : préférence du système */
+		}
+		// Valeurs enregistrées par l'ancienne version du site.
+		if (choix === 'clair') choix = 'light';
+		if (choix === 'sombre') choix = 'dark';
+		if (choix === 'light' || choix === 'dark') racine.dataset.theme = choix;
+	})();
+</script>

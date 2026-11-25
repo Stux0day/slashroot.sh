@@ -1,0 +1,74 @@
+---
+// Articles d'un dossier rangés par sous-dossier : le nom du sous-dossier dans
+// une colonne étroite à gauche, la liste à droite. « ./ » désigne les articles
+// posés à la racine du dossier.
+import type { Groupe } from '../lib/articles';
+import ListeArticles from './ListeArticles.astro';
+
+interface Props {
+	groupes: Groupe[];
+}
+
+const { groupes } = Astro.props;
+// Un dossier sans sous-dossier n'a pas besoin d'étiquette « ./ ».
+const seulALaRacine = groupes.length === 1 && groupes[0].nom === null;
+---
+
+<div class="groupes">
+	{
+		groupes.map((groupe) => (
+			<div class:list={['groupe', { 'groupe--seul': seulALaRacine }]}>
+				{!seulALaRacine && <h3 class="groupe__nom etiquette">{groupe.nom ? `${groupe.nom}/` : './'}</h3>}
+				<div class="groupe__liste">
+					<ListeArticles articles={groupe.articles} />
+				</div>
+			</div>
+		))
+	}
+</div>
+
+<style>
+	.groupes {
+		display: grid;
+		gap: clamp(2rem, 4vw, 3rem);
+	}
+
+	.groupe {
+		display: grid;
+		grid-template-columns: repeat(12, minmax(0, 1fr));
+		column-gap: var(--colonnes-gap);
+		row-gap: 0.75rem;
+	}
+
+	/* Nom de dossier tel qu'il est sur le disque (ArchLinux/, WebServer/) :
+	   pas de capitales forcées, contrairement aux autres étiquettes. */
+	.groupe__nom {
+		grid-column: 1 / span 2;
+		padding-top: 1.2rem;
+		color: var(--encre);
+		font-size: var(--t-s);
+		letter-spacing: 0;
+		text-transform: none;
+		overflow-wrap: anywhere;
+	}
+
+	.groupe__liste {
+		grid-column: 3 / -1;
+		min-width: 0;
+	}
+
+	.groupe--seul .groupe__liste {
+		grid-column: 1 / -1;
+	}
+
+	@media (max-width: 48rem) {
+		.groupe__nom,
+		.groupe__liste {
+			grid-column: 1 / -1;
+		}
+
+		.groupe__nom {
+			padding-top: 0;
+		}
+	}
+</style>

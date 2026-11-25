@@ -1,0 +1,273 @@
+---
+// Barre du haut, collante : logo, navigation, bascule clair/sombre.
+// Sous 64rem, la navigation passe derrière un bouton « Menu » ; sans
+// JavaScript, elle reste affichée sur une seconde ligne.
+import { certifs } from '../data/site';
+import Icon from './Icon.astro';
+import Marque from './Marque.astro';
+
+const chemin = Astro.url.pathname;
+
+// Les sections de l'accueil sont visées par `/#ancre` et non `#ancre` : depuis
+// une autre page, une ancre nue ne mènerait nulle part.
+const liens = [
+	{ href: '/#stack', texte: 'Compétences' },
+	{ href: '/#travaux', texte: 'Réalisations' },
+	...(certifs.length > 0 ? [{ href: '/#certifs', texte: 'Certifications' }] : []),
+	{ href: '/blog/', texte: 'Articles', actif: chemin.startsWith('/blog') },
+];
+---
+
+<header class="barre">
+	<div class="barre__interieur conteneur">
+		<Marque />
+
+		<nav class="nav" id="navigation" aria-label="Navigation principale">
+			<ul role="list">
+				{
+					liens.map((lien) => (
+						<li>
+							<a href={lien.href} aria-current={lien.actif ? 'page' : undefined}>
+								{lien.texte}
+							</a>
+						</li>
+					))
+				}
+			</ul>
+		</nav>
+
+		<div class="barre__outils">
+			<button class="bouton-icone" id="bascule-theme" type="button" aria-label="Changer de thème" title="Changer de thème">
+				<span class="icone-lune"><Icon nom="lune" taille={20} /></span>
+				<span class="icone-soleil"><Icon nom="soleil" taille={20} /></span>
+			</button>
+			<button class="bouton-icone bouton-menu" type="button" aria-expanded="false" aria-controls="navigation" aria-label="Menu">
+				<span class="icone-menu"><Icon nom="menu" taille={22} /></span>
+				<span class="icone-fermer"><Icon nom="fermer" taille={22} /></span>
+			</button>
+		</div>
+	</div>
+</header>
+
+<script>
+	// ---------- Bascule clair / sombre ----------
+	const racine = document.documentElement;
+	const bascule = document.getElementById('bascule-theme');
+	const systemeSombre = matchMedia('(prefers-color-scheme: dark)');
+
+	const themeAffiche = () => racine.dataset.theme ?? (systemeSombre.matches ? 'dark' : 'light');
+
+	const decrireBascule = () => {
+		const texte = themeAffiche() === 'dark' ? 'Passer en mode clair' : 'Passer en mode sombre';
+		bascule?.setAttribute('aria-label', texte);
+		bascule?.setAttribute('title', texte);
+	};
+
+	bascule?.addEventListener('click', () => {
+		const suivant = themeAffiche() === 'dark' ? 'light' : 'dark';
+		racine.dataset.theme = suivant;
+		try {
+			localStorage.setItem('theme', suivant);
+		} catch {
+			/* stockage indisponible : le choix vaut pour cette page seulement */
+		}
+		decrireBascule();
+	});
+	systemeSombre.addEventListener('change', decrireBascule);
+	decrireBascule();
+
+	// ---------- Menu des petits écrans ----------
+	const barre = document.querySelector<HTMLElement>('.barre');
+	const boutonMenu = document.querySelector<HTMLButtonElement>('.bouton-menu');
+	const navigation = document.getElementById('navigation');
+
+	const ouvrirMenu = (ouvert: boolean) => {
+		barre?.classList.toggle('barre--ouverte', ouvert);
+		boutonMenu?.setAttribute('aria-expanded', String(ouvert));
+		boutonMenu?.setAttribute('aria-label', ouvert ? 'Fermer le menu' : 'Menu');
+	};
+
+	boutonMenu?.addEventListener('click', () => {
+		ouvrirMenu(boutonMenu.getAttribute('aria-expanded') !== 'true');
+	});
+
+	// Un lien suivi, Échap ou le passage en grand écran referment le menu.
+	navigation?.addEventListener('click', (evenement) => {
+		if ((evenement.target as Element).closest('a')) ouvrirMenu(false);
+	});
+	addEventListener('keydown', (evenement) => {
+		if (evenement.key === 'Escape' && boutonMenu?.getAttribute('aria-expanded') === 'true') {
+			ouvrirMenu(false);
+			boutonMenu.focus();
+		}
+	});
+	matchMedia('(min-width: 64rem)').addEventListener('change', (requete) => {
+		if (requete.matches) ouvrirMenu(false);
+	});
+</script>
+
+<style>
+	.barre {
+		position: sticky;
+		top: 0;
+		z-index: 50;
+		border-bottom: 1px solid var(--filet);
+		background: var(--papier);
+		/* Reste immobile pendant le fondu entre deux pages. */
+		view-transition-name: barre;
+	}
+
+	.barre__interieur {
+		display: flex;
+		align-items: center;
+		gap: 1rem 2rem;
+		min-height: var(--barre);
+	}
+
+	.nav {
+		margin-left: auto;
+	}
+
+	.nav ul {
+		display: flex;
+		gap: 0.25rem;
+		margin: 0;
+	}
+
+	.nav a {
+		display: inline-flex;
+		align-items: center;
+		min-height: 2.75rem;
+		padding-inline: 0.75rem;
+		font-size: var(--t-s);
+		font-weight: 600;
+		text-decoration: none;
+		transition: color var(--duree) var(--courbe);
+	}
+
+	.nav a:hover {
+		color: var(--accent-texte);
+	}
+
+	.nav a[aria-current='page'] {
+		text-decoration: underline;
+		text-decoration-color: var(--accent);
+		text-decoration-thickness: 2px;
+		text-underline-offset: 0.45em;
+	}
+
+	.barre__outils {
+		display: flex;
+		gap: 0.25rem;
+		margin-right: -0.6rem;
+	}
+
+	.bouton-icone {
+		display: grid;
+		place-items: center;
+		width: 2.75rem;
+		height: 2.75rem;
+		padding: 0;
+		border: 0;
+		background: none;
+		transition: color var(--duree) var(--courbe);
+	}
+
+	.bouton-icone:hover {
+		color: var(--accent-texte);
+	}
+
+	/* Une seule icône visible : celle du mode vers lequel on bascule. */
+	.icone-soleil,
+	.icone-fermer,
+	.bouton-menu {
+		display: none;
+	}
+
+	:global(:root[data-theme='dark']) .icone-soleil {
+		display: block;
+	}
+
+	:global(:root[data-theme='dark']) .icone-lune {
+		display: none;
+	}
+
+	@media (prefers-color-scheme: dark) {
+		:global(:root:not([data-theme='light'])) .icone-soleil {
+			display: block;
+		}
+
+		:global(:root:not([data-theme='light'])) .icone-lune {
+			display: none;
+		}
+	}
+
+	/* ---------- Petits écrans ---------- */
+	@media (max-width: 63.999rem) {
+		/* Sans JavaScript : la navigation passe sur une seconde ligne. */
+		.barre__interieur {
+			flex-wrap: wrap;
+		}
+
+		.nav {
+			order: 3;
+			width: 100%;
+			margin-left: 0;
+		}
+
+		.nav ul {
+			flex-wrap: wrap;
+			margin-inline: -0.75rem;
+		}
+
+		.barre__outils {
+			margin-left: auto;
+		}
+
+		/* Avec JavaScript : la navigation se replie derrière « Menu ». */
+		:global(.js) .bouton-menu {
+			display: grid;
+		}
+
+		:global(.js) .nav {
+			display: none;
+		}
+
+		:global(.js) .barre--ouverte .nav {
+			display: block;
+			position: absolute;
+			top: 100%;
+			left: 0;
+			width: 100%;
+			padding: 0.5rem var(--gouttiere) 1.5rem;
+			border-bottom: 2px solid var(--encre);
+			background: var(--papier);
+		}
+
+		:global(.js) .barre--ouverte .nav ul {
+			flex-direction: column;
+			margin-inline: 0;
+		}
+
+		:global(.js) .barre--ouverte .nav li + li {
+			border-top: 1px solid var(--filet);
+		}
+
+		:global(.js) .barre--ouverte .nav a {
+			width: 100%;
+			min-height: 3.5rem;
+			padding-inline: 0;
+			font-size: var(--t-xl);
+			font-variation-settings: var(--etire);
+			font-weight: 750;
+		}
+
+		:global(.js) .barre--ouverte .icone-menu {
+			display: none;
+		}
+
+		:global(.js) .barre--ouverte .icone-fermer {
+			display: block;
+		}
+	}
+</style>

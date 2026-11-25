@@ -1,0 +1,73 @@
+---
+// Rangée de dossiers avec leur nombre d'articles. Mène soit à une ancre de la
+// même page (index des articles), soit à la page du dossier.
+import Tiret from './Tiret.astro';
+
+interface Props {
+	dossiers: { id: string; libelle: string; total: number }[];
+	/** true : liens vers #id sur la page courante ; false : vers /blog/id/. */
+	ancres?: boolean;
+	/** Nom accessible de la navigation. */
+	etiquette: string;
+}
+
+const { dossiers, ancres = false, etiquette } = Astro.props;
+---
+
+<nav class="puces-dossiers" aria-label={etiquette}>
+	<ul role="list">
+		{
+			dossiers.map((dossier) => (
+				<li>
+					<a href={ancres ? `#${dossier.id}` : `/blog/${dossier.id}/`}>
+						<span class="puces-dossiers__nom">
+							<Tiret texte={dossier.libelle} />
+						</span>
+						<span class="puces-dossiers__total">{dossier.total}</span>
+					</a>
+				</li>
+			))
+		}
+	</ul>
+</nav>
+
+<style>
+	ul {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		margin: 0;
+	}
+
+	a {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.75rem;
+		min-height: 2.75rem;
+		padding: 0 0.9rem;
+		border: 1px solid var(--encre);
+		font-family: var(--police-mono);
+		font-size: var(--t-s);
+		font-weight: 600;
+		text-decoration: none;
+		transition:
+			background-color var(--duree) var(--courbe),
+			color var(--duree) var(--courbe);
+	}
+
+	.puces-dossiers__total {
+		color: var(--encre-3);
+		font-weight: 500;
+		font-variant-numeric: tabular-nums;
+		transition: color var(--duree) var(--courbe);
+	}
+
+	a:hover {
+		background: var(--encre);
+		color: var(--papier);
+	}
+
+	a:hover .puces-dossiers__total {
+		color: inherit;
+	}
+</style>

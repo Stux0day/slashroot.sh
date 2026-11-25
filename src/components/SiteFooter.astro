@@ -1,0 +1,165 @@
+---
+// Pied de page : colonnes de liens puis, en signature, le nom du site en très
+// grand sur toute la largeur.
+import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+import { contact, identite } from '../data/site';
+import { nomProfil } from '../lib/profils';
+import Icon from './Icon.astro';
+import Marque from './Marque.astro';
+---
+
+<footer class="pied">
+	<div class="conteneur pied__grille">
+		<div class="pied__presentation">
+			<Marque />
+			<p>{SITE_DESCRIPTION}</p>
+		</div>
+
+		<nav class="pied__colonne" aria-labelledby="pied-site">
+			<h2 class="etiquette" id="pied-site">Site</h2>
+			<ul role="list">
+				<li><a href="/">Accueil</a></li>
+				<li><a href="/blog/">Articles</a></li>
+				<li>
+					<a href="/rss.xml" class="pied__icone"><Icon nom="rss" taille={15} />Flux RSS</a>
+				</li>
+			</ul>
+		</nav>
+
+		<nav class="pied__colonne" aria-labelledby="pied-profils">
+			<h2 class="etiquette" id="pied-profils">Profils</h2>
+			<ul role="list">
+				{
+					contact.map((ligne) => (
+						<li>
+							<a href={ligne.lien} rel="me noopener" class="pied__icone">
+								<Icon nom={ligne.cle} taille={15} />
+								{nomProfil(ligne.cle)}
+							</a>
+						</li>
+					))
+				}
+			</ul>
+		</nav>
+	</div>
+
+	<div class="conteneur pied__bas etiquette">
+		<span>&copy; {new Date().getFullYear()} {identite.nom}</span>
+		<a href="#" class="pied__haut">Haut de page<Icon nom="fleche-haut" taille={14} /></a>
+	</div>
+
+	<div class="conteneur pied__signature" aria-hidden="true">
+		<p>{SITE_TITLE}</p>
+	</div>
+</footer>
+
+<style>
+	.pied {
+		margin-top: auto;
+		border-top: 2px solid var(--encre);
+	}
+
+	.pied__grille {
+		display: grid;
+		grid-template-columns: repeat(12, minmax(0, 1fr));
+		column-gap: var(--colonnes-gap);
+		row-gap: 2.5rem;
+		padding-block: clamp(2.5rem, 5vw, 4rem);
+	}
+
+	.pied__presentation {
+		display: grid;
+		gap: 1rem;
+		grid-column: 1 / span 5;
+		justify-items: start;
+	}
+
+	.pied__presentation p {
+		max-width: 26rem;
+		color: var(--encre-2);
+		font-size: var(--t-s);
+	}
+
+	.pied__colonne {
+		grid-column: span 2;
+	}
+
+	.pied__colonne:first-of-type {
+		grid-column: 8 / span 2;
+	}
+
+	.pied__colonne h2 {
+		margin-bottom: 0.75rem;
+	}
+
+	.pied__colonne ul {
+		display: grid;
+		margin: 0;
+	}
+
+	.pied__colonne a {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		min-height: 2.5rem;
+		font-weight: 600;
+		text-decoration: none;
+		transition: color var(--duree) var(--courbe);
+	}
+
+	.pied__colonne a:hover {
+		color: var(--accent-texte);
+	}
+
+	.pied__bas {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: space-between;
+		gap: 1rem;
+		padding-block: 1.25rem;
+		border-top: 1px solid var(--filet);
+	}
+
+	.pied__haut {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		text-decoration: none;
+	}
+
+	.pied__haut:hover {
+		color: var(--accent-texte);
+	}
+
+	/* Le nom du site occupe toute la largeur : la taille est exprimée en
+	   unités du conteneur (cqi) pour s'y ajuster quelle que soit la fenêtre.
+	   13,25 cqi est mesuré pour « slashroot.sh » en Archivo élargi ; à
+	   recalculer si SITE_TITLE change de longueur. */
+	.pied__signature {
+		container-type: inline-size;
+		overflow: hidden;
+	}
+
+	.pied__signature p {
+		margin-bottom: -0.17em;
+		font-size: 13.25cqi;
+		font-variation-settings: var(--etire);
+		font-weight: 900;
+		line-height: 1;
+		letter-spacing: -0.045em;
+		white-space: nowrap;
+		color: var(--encre);
+		user-select: none;
+	}
+
+	@media (max-width: 48rem) {
+		.pied__presentation {
+			grid-column: 1 / -1;
+		}
+
+		.pied__colonne,
+		.pied__colonne:first-of-type {
+			grid-column: span 6;
+		}
+	}
+</style>

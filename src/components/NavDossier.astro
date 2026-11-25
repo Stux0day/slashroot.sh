@@ -1,0 +1,115 @@
+---
+// Rail de gauche des articles, sur grand écran : tous les articles du même
+// dossier, rangés par sous-dossier, l'article lu mis en évidence.
+import { type Article, grouper } from '../lib/articles';
+import Icon from './Icon.astro';
+import Tiret from './Tiret.astro';
+
+interface Props {
+	dossier: { id: string; libelle: string };
+	articles: Article[];
+	/** id de l'article affiché. */
+	courant: string;
+}
+
+const { dossier, articles, courant } = Astro.props;
+const groupes = grouper(articles);
+---
+
+<nav class="nav-dossier" aria-labelledby="nav-dossier-titre">
+	<p class="nav-dossier__titre etiquette" id="nav-dossier-titre">Dans le dossier</p>
+	<a class="nav-dossier__dossier" href={`/blog/${dossier.id}/`}>
+		<Tiret texte={dossier.libelle} />
+		<span class="nav-dossier__fleche"><Icon nom="fleche-droite" taille={16} /></span>
+	</a>
+	{
+		groupes.map((groupe) => (
+			<div class="nav-dossier__groupe">
+				{groupe.nom && <p class="nav-dossier__sous">{groupe.nom}/</p>}
+				<ul role="list">
+					{groupe.articles.map((article) => (
+						<li>
+							<a href={`/blog/${article.id}/`} aria-current={article.id === courant ? 'page' : undefined}>
+								{article.data.title}
+							</a>
+						</li>
+					))}
+				</ul>
+			</div>
+		))
+	}
+</nav>
+
+<style>
+	.nav-dossier {
+		padding-top: 1rem;
+		border-top: 2px solid var(--encre);
+	}
+
+	.nav-dossier__dossier {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		margin-top: 0.5rem;
+		font-size: var(--t-xl);
+		font-variation-settings: var(--etire);
+		font-weight: 800;
+		line-height: 1.1;
+		text-decoration: none;
+		transition: color var(--duree) var(--courbe);
+	}
+
+	.nav-dossier__fleche {
+		display: inline-flex;
+		transition: transform var(--duree) var(--courbe);
+	}
+
+	.nav-dossier__dossier:hover {
+		color: var(--accent-texte);
+	}
+
+	.nav-dossier__dossier:hover .nav-dossier__fleche {
+		transform: translateX(3px);
+	}
+
+	.nav-dossier__groupe {
+		margin-top: 1.25rem;
+	}
+
+	.nav-dossier__sous {
+		margin-bottom: 0.35rem;
+		font-family: var(--police-mono);
+		font-size: var(--t-xs);
+		font-weight: 500;
+		color: var(--encre-3);
+	}
+
+	/* Même rail que le sommaire : un filet fin, et un segment d'accent sur
+	   l'article lu. */
+	ul {
+		margin: 0;
+		border-left: 1px solid var(--filet);
+	}
+
+	ul a {
+		display: block;
+		margin-left: -1px;
+		padding: 0.35rem 0 0.35rem 0.85rem;
+		border-left: 2px solid transparent;
+		color: var(--encre-2);
+		font-size: var(--t-s);
+		line-height: 1.4;
+		text-decoration: none;
+		transition: color var(--duree) var(--courbe);
+	}
+
+	ul a:hover {
+		color: var(--accent-texte);
+	}
+
+	ul a[aria-current='page'] {
+		border-left-color: var(--accent);
+		color: var(--encre);
+		font-weight: 650;
+	}
+</style>

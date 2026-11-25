@@ -1,37 +1,44 @@
 ---
-import { type CollectionEntry, getCollection, render } from 'astro:content';
-import BlogPost from '../../layouts/BlogPost.astro';
+import { getCollection, render } from 'astro:content';
+import ArticleLayout from '../../layouts/ArticleLayout.astro';
+import { type Article, dossierDe, statistiques } from '../../lib/articles';
+import { parOrdreDAffichage } from '../../lib/tri';
 
 export async function getStaticPaths() {
-	const posts = await getCollection('blog');
-	return posts.map((post) => ({
-		params: { slug: post.id },
-		props: post,
-	}));
+	const articles = await getCollection('blog');
+	return articles.map((article) => {
+		// Voisins dans l'ordre d'affichage du dossier (src/lib/tri.ts).
+		const freres = articles
+			.filter((autre) => dossierDe(autre) === dossierDe(article))
+			.sort(parOrdreDAffichage);
+		const rang = freres.findIndex((autre) => autre.id === article.id);
+		return {
+			params: { slug: article.id },
+			props: { article, freres, precedent: freres[rang - 1], suivant: freres[rang + 1] },
+		};
+	});
 }
-type Props = CollectionEntry<'blog'>;
 
-const post = Astro.props;
-// `headings` alimente le sommaire latéral de la mise en page.
-const { Content, headings } = await render(post);
+interface Props {
+	article: Article;
+	/** Articles du même dossier, pour le rail de gauche. */
+	freres: Article[];
+	precedent?: Article;
+	suivant?: Article;
+}
 
-// Statistiques affichées dans la fiche. Les blocs de code sont retirés du
-// comptage : ils gonflent le nombre de mots sans rien dire du temps de
-// lecture réel.
-const corps = post.body ?? '';
-const mots = corps
-	.replace(/```[\s\S]*?```/g, ' ')
-	.replace(/[#>*_`|[\]()-]/g, ' ')
-	.split(/\s+/)
-	.filter(Boolean).length;
-
-const statistiques = {
-	mots,
-	lecture: Math.max(1, Math.round(mots / 200)),
-	taille: Buffer.byteLength(corps, 'utf8'),
-};
+const { article, freres, precedent, suivant } = Astro.props;
+// `headings` alimente le sommaire.
+const { Content, headings } = await render(article);
 ---
 
-<BlogPost {...post.data} id={post.id} headings={headings} statistiques={statistiques}>
+<ArticleLayout
+	article={article}
+	titres={headings}
+	statistiques={statistiques(article)}
+	freres={freres}
+	precedent={precedent}
+	suivant={suivant}
+>
 	<Content />
-</BlogPost>
+</ArticleLayout>

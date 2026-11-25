@@ -1,0 +1,42 @@
+---
+// Logo du site : un carré d'accent portant la barre oblique de la racine,
+// suivi du nom. Utilisé dans la barre du haut et le pied de page.
+import { SITE_TITLE } from '../consts';
+---
+
+<a class="marque" href="/">
+	<span class="marque__signe" aria-hidden="true">/</span>
+	<span class="marque__nom">{SITE_TITLE}</span>
+	<span class="sr-only">, accueil</span>
+</a>
+
+<style>
+	.marque {
+		display: inline-flex;
+		flex: none;
+		align-items: center;
+		gap: 0.7rem;
+		min-height: 2.75rem;
+		font-family: var(--police-mono);
+		font-size: 0.95rem;
+		font-weight: 700;
+		letter-spacing: -0.01em;
+		text-decoration: none;
+	}
+
+	.marque__signe {
+		display: grid;
+		place-items: center;
+		width: 2rem;
+		height: 2rem;
+		background: var(--accent);
+		color: var(--sur-accent);
+		font-size: 1.15rem;
+		line-height: 1;
+		transition: transform var(--duree) var(--courbe);
+	}
+
+	.marque:hover .marque__signe {
+		transform: rotate(-90deg);
+	}
+</style>

@@ -1,383 +1,576 @@
 ---
-// src/pages/index.astro
-// Page d'accueil autonome : aucune dépendance à un layout existant.
-// Tu pourras extraire le <head> dans src/layouts/ plus tard.
+// Page d'accueil. Tout le texte vient de src/data/site.ts : ce fichier ne fait
+// que la mise en page.
+import { getCollection } from 'astro:content';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
+import Icon from '../components/Icon.astro';
+import ListeArticles from '../components/ListeArticles.astro';
+import Tiret from '../components/Tiret.astro';
+import TitreSection from '../components/TitreSection.astro';
+import { SITE_DESCRIPTION } from '../consts';
+import { banniere, certifs, contact, identite, stack, travaux } from '../data/site';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { chargerDossiers, numero, parDateDecroissante } from '../lib/articles';
+import { nomProfil } from '../lib/profils';
 
-import { Font } from 'astro:assets';
+const articles = await getCollection('blog');
+const recents = [...articles].sort(parDateDecroissante).slice(0, 6);
+const dossiers = await chargerDossiers();
+const nbOutils = stack.reduce((total, ligne) => total + ligne.outils.length, 0);
 
-import Bruit from '../components/Bruit.astro';
-import Footer from '../components/Footer.astro';
-// La section stack, sortie de cette page parce qu'elle a beaucoup bougé et
-// qu'elle a son propre CSS. Elle rend elle-même sa <section id="stack">, avec
-// l'étiquette et l'ancre visée par la barre du haut.
-import Stack from '../components/stack/StackCouches.astro';
-import ThemeScript from '../components/ThemeScript.astro';
-import Topbar from '../components/Topbar.astro';
+// Le bouton « Télécharger le CV » n'apparaît que si le fichier existe : un lien
+// mort en tête de page coûte plus qu'un bouton absent. Déposer le PDF dans
+// public/cv.pdf pour le faire apparaître.
+const cvPresent = existsSync(join(process.cwd(), 'public', 'cv.pdf'));
 
-// --- Contenu éditorial : voir src/data/site.ts --------------------------
-import { banniere, certifs, identite, travaux } from '../data/site';
+const chiffres = [
+	{ valeur: articles.length, libelle: 'articles', href: '/blog/' },
+	{ valeur: dossiers.length, libelle: 'dossiers', href: '/blog/' },
+	{ valeur: nbOutils, libelle: 'outils', href: '#stack' },
+	...(certifs.length > 0 ? [{ valeur: certifs.length, libelle: 'certifications', href: '#certifs' }] : []),
+];
 
-// Jetons de thème, reset et boutons : source unique.
-import '../styles/global.css';
+// Les sections sont numérotées dans leur ordre d'affichage : si une section
+// disparaît (certifications vides), la numérotation reste continue.
+let section = 0;
+const prochaineSection = () => numero(++section);
 ---
 
-<!doctype html>
-<html lang="fr">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{identite.nom} — {identite.role}</title>
-    <meta
-      name="description"
-      content="Portfolio d'un administrateur systèmes et infrastructure : Linux, Terraform, gestion de secrets, supervision."
-    />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500&display=swap"
-      rel="stylesheet"
-    />
+<BaseLayout title={`${identite.nom} — ${identite.role}`} description={SITE_DESCRIPTION}>
+	<section class="hero conteneur" aria-labelledby="hero-titre">
+		<p class="hero__intro etiquette">{banniere.intro.trim()}</p>
+		<h1 class="hero__titre" id="hero-titre"><Tiret texte={banniere.titre} /></h1>
 
-    {/* Cette page a son propre <head> et ne passe pas par BaseHead : ses
-        polices se déclarent donc ici. VT323 pour la bannière, Rubik Glitch pour
-        la barre supérieure. */}
-    <Font cssVariable="--font-vt323" preload />
-    <Font cssVariable="--font-rubik-glitch" preload />
+		<div class="hero__bas">
+			<div class="hero__presentation">
+				<p class="hero__chapo">
+					{identite.nom} — {identite.role.toLowerCase()} depuis {identite.depuis}, basé à {identite.ville}.
+				</p>
+				<ul class="hero__domaines" role="list">
+					{identite.domaines.map((domaine) => <li>{domaine}</li>)}
+				</ul>
+				<div class="hero__actions">
+					{
+						cvPresent && (
+							<a class="btn btn--plein" href="/cv.pdf" download>
+								<Icon nom="telecharger" />
+								Télécharger le CV
+							</a>
+						)
+					}
+					<a class:list={['btn', { 'btn--plein': !cvPresent }]} href="/blog/">
+						Lire les articles
+						<Icon nom="fleche-droite" />
+					</a>
+				</div>
+			</div>
 
-    <ThemeScript />
-  </head>
+			<aside class="fiche" aria-labelledby="fiche-titre">
+				<h2 class="fiche__titre etiquette" id="fiche-titre">
+					<span>Fiche</span>
+					<span>{identite.service}</span>
+				</h2>
+				<dl>
+					<div>
+						<dt class="etiquette">Nom</dt>
+						<dd>{identite.nom}</dd>
+					</div>
+					<div>
+						<dt class="etiquette">Rôle</dt>
+						<dd>{identite.role}</dd>
+					</div>
+					<div>
+						<dt class="etiquette">Depuis</dt>
+						<dd>{identite.depuis}</dd>
+					</div>
+					<div>
+						<dt class="etiquette">Lieu</dt>
+						<dd>{identite.ville}</dd>
+					</div>
+					<div>
+						<dt class="etiquette">Statut</dt>
+						<dd><span class="fiche__pastille" aria-hidden="true"></span>{identite.statut}</dd>
+					</div>
+					<div>
+						<dt class="etiquette">Profils</dt>
+						<dd class="fiche__profils">
+							{
+								contact.map((ligne) => (
+									<a href={ligne.lien} rel="me noopener">
+										{nomProfil(ligne.cle)}
+										<Icon nom="fleche-diag" taille={14} />
+									</a>
+								))
+							}
+						</dd>
+					</div>
+				</dl>
+			</aside>
+		</div>
+	</section>
 
-  <body>
-    <Topbar />
+	<div class="conteneur">
+		<ul class="chiffres" role="list">
+			{
+				chiffres.map((chiffre) => (
+					<li>
+						<a class="chiffre" href={chiffre.href}>
+							<span class="chiffre__valeur">{chiffre.valeur}</span>
+							<span class="chiffre__libelle etiquette">{chiffre.libelle}</span>
+						</a>
+					</li>
+				))
+			}
+		</ul>
+	</div>
 
-    <main>
-      <!-- HERO : titre en police pixel à gauche, sortie systemctl à droite -->
-      <section class="hero">
-        <div class="hero__titre">
-          <p class="banniere__intro">
-            <span class="banniere__ponct">//</span>
-            {banniere.intro}
-          </p>
-          <h1 class="banniere__titre">
-            <span class="banniere__ponct" aria-hidden="true">{'{"'}</span>
-            {banniere.titre}
-            <span class="banniere__ponct" aria-hidden="true">{'"}'}</span>
-          </h1>
-          <Bruit />
-          <div class="hero__actions">
-            <a class="btn btn--primaire" href="/cv.pdf">Télécharger le CV</a>
-          </div>
-        </div>
+	<section class="bloc conteneur" id="stack" aria-labelledby="titre-stack">
+		<TitreSection
+			numero={prochaineSection()}
+			titre="Compétences"
+			id="titre-stack"
+			note={`${stack.length} domaines · ${nbOutils} outils`}
+		/>
+		<ol class="competences" role="list">
+			{
+				stack.map((ligne, i) => (
+					<li class="competence">
+						<span class="competence__numero etiquette" aria-hidden="true">
+							{numero(i + 1)}
+						</span>
+						<h3 class="competence__domaine">{ligne.domaine}</h3>
+						<ul class="competence__outils" role="list">
+							{ligne.outils.map((outil) => (
+								<li class="puce">{outil}</li>
+							))}
+						</ul>
+					</li>
+				))
+			}
+		</ol>
+	</section>
 
-        <div class="unit" role="img" aria-label={`Statut : ${identite.role}, ${identite.statut}`}>
-          <div class="unit__barre">
-            <span class="unit__prompt">$</span> systemctl status {identite.service}
-          </div>
-          <pre class="unit__sortie"><span class="ln"><span class="dot" aria-hidden="true"></span> <b>{identite.service}</b> — {identite.role}</span>
-<span class="ln">     Loaded: <span class="v">loaded</span> (/etc/systemd/system/{identite.service}; <span class="v">enabled</span>)</span>
-<span class="ln">     Active: <span class="live">active (running)</span> since {identite.depuis}</span>
-<span class="ln">   Location: <span class="v">{identite.ville}</span></span>
-<span class="ln">     Status: <span class="v">"{identite.statut}"</span></span>
-<span class="ln">      Tasks: <span class="v">infra, automatisation, sécurité, observabilité</span></span></pre>
-        </div>
-      </section>
+	<section class="bloc conteneur" id="travaux" aria-labelledby="titre-travaux">
+		<TitreSection numero={prochaineSection()} titre="Réalisations" id="titre-travaux" />
+		<ol class="travaux" role="list">
+			{
+				travaux.map((travail, i) => (
+					<li class="travail">
+						<span class="travail__numero" aria-hidden="true">
+							{numero(i + 1)}
+						</span>
+						<h3 class="travail__titre">{travail.titre}</h3>
+						<p class="travail__resume">{travail.resume}</p>
+						<ul class="travail__tags" role="list">
+							{travail.tags.map((tag) => (
+								<li class="puce">{tag}</li>
+							))}
+						</ul>
+					</li>
+				))
+			}
+		</ol>
+	</section>
 
-      <Stack />
+	{
+		certifs.length > 0 && (
+			<section class="bloc conteneur" id="certifs" aria-labelledby="titre-certifs">
+				<TitreSection numero={prochaineSection()} titre="Certifications" id="titre-certifs" />
+				<ul class="certifs" role="list">
+					{certifs.map((certif) => (
+						<li class="certif">
+							<span class="certif__annee">{certif.annee}</span>
+							<span class="certif__intitule">
+								{certif.lien ? (
+									<a href={certif.lien} rel="noopener">
+										{certif.intitule}
+									</a>
+								) : (
+									certif.intitule
+								)}
+							</span>
+							<span class="certif__organisme puce">{certif.organisme}</span>
+						</li>
+					))}
+				</ul>
+			</section>
+		)
+	}
 
-      <!-- TRAVAUX -->
-      <section id="travaux" class="bloc">
-        <p class="bloc__label"># travaux</p>
-        <div class="bloc__corps">
-          <div class="grille">
-            {
-              travaux.map((t) => (
-                <article class="panneau">
-                  <h2>{t.titre}</h2>
-                  <p>{t.resume}</p>
-                  <ul class="tags">
-                    {t.tags.map((tag) => (
-                      <li>{tag}</li>
-                    ))}
-                  </ul>
-                </article>
-              ))
-            }
-          </div>
-        </div>
-      </section>
+	<section class="bloc bloc--dernier conteneur" id="articles" aria-labelledby="titre-articles">
+		<TitreSection
+			numero={prochaineSection()}
+			titre="Derniers articles"
+			id="titre-articles"
+			lien={{ href: '/blog/', texte: `Les ${articles.length} articles` }}
+		/>
+		<ListeArticles articles={recents} avecDossier />
+	</section>
+</BaseLayout>
 
-      {/* CERTIFS : trois zones par ligne — année, intitulé, organisme en
-          pastille. La section a d'abord réutilisé la grille clé/valeur qui
-          servait alors au stack, mais celle-ci réservait 12rem à la clé, ce
-          qui creusait un vide entre « 2025 » et le titre, et noyait
-          l'organisme derrière un tiret dans la même coulée de mono. D'où la
-          sous-grille. Ici
-          l'intitulé porte l'information et passe en police de titrage ;
-          l'année et l'organisme l'encadrent en chasse fixe, de part et
-          d'autre.
+<style>
+	/* ---------- Ouverture ---------- */
+	.hero {
+		padding-block: clamp(2.5rem, 7vw, 6.5rem) clamp(2.5rem, 5vw, 4.5rem);
+	}
 
-          La section disparaît tant que src/data/site.ts n'en déclare aucune —
-          un bloc vide vaut moins que pas de bloc. */}
-      {
-        certifs.length > 0 && (
-          <section id="certifs" class="bloc">
-            <p class="bloc__label"># certifs</p>
-            <div class="bloc__corps">
-              <ul class="certifs">
-                {certifs.map((c) => (
-                  <li class="certif">
-                    <span class="certif__annee">{c.annee}</span>
-                    <span class="certif__organisme">{c.organisme}</span>
-                    <span class="certif__intitule">
-                      {c.lien ? (
-                        <a href={c.lien} rel="noopener">
-                          {c.intitule}
-                        </a>
-                      ) : (
-                        c.intitule
-                      )}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </section>
-        )
-      }
-    </main>
+	.hero__intro {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		margin-bottom: clamp(1.25rem, 2.5vw, 2rem);
+		color: var(--encre-2);
+		text-transform: none;
+		letter-spacing: 0.02em;
+		font-size: var(--t-s);
+	}
 
-    <Footer />
+	.hero__intro::before {
+		content: '';
+		flex: none;
+		width: 2.5rem;
+		height: 2px;
+		background: var(--accent);
+	}
 
-    <style is:global>
-      /* Jetons, reset, .btn : voir src/styles/global.css */
+	.hero__titre {
+		margin-left: -0.05em;
+		font-size: var(--t-geant);
+		font-variation-settings: var(--etire);
+		font-weight: 900;
+		line-height: 0.86;
+		letter-spacing: -0.04em;
+	}
 
-      /* ---------- Titre du hero ---------- */
-      /* Seul endroit du site en VT323 : une police pixel n'a qu'une graisse
-         et fatigue vite en lecture suivie, mais elle porte bien un titre.
-         Tailles calées sur une demi-largeur, le titre partageant la ligne
-         avec le bloc systemctl. */
-      .banniere__intro {
-        margin: 0 0 0.15em;
-        color: var(--signal);
-        font-family: var(--font-vt323), var(--mono);
-        font-size: clamp(1rem, 1.8vw, 1.5rem);
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-      }
+	.hero__bas {
+		display: grid;
+		grid-template-columns: repeat(12, minmax(0, 1fr));
+		column-gap: var(--colonnes-gap);
+		row-gap: 3rem;
+		margin-top: clamp(2.5rem, 5vw, 4.5rem);
+		padding-top: clamp(1.25rem, 2.5vw, 2rem);
+		border-top: 2px solid var(--encre);
+	}
 
-      .banniere__titre {
-        margin: 0;
-        color: var(--signal);
-        font-family: var(--font-vt323), var(--mono);
-        font-weight: 400;
-        font-size: clamp(2.2rem, 5vw, 4.2rem);
-        line-height: 1;
-        letter-spacing: 0.02em;
-      }
+	.hero__presentation {
+		grid-column: 1 / span 6;
+	}
 
-      /* Accolades, guillemets et « // » : ponctuation de code, en retrait
-         pour que le texte reste ce qu'on lit en premier. */
-      .banniere__ponct {
-        color: var(--dim);
-      }
+	.hero__chapo {
+		max-width: 30ch;
+		font-size: var(--t-2xl);
+		font-weight: 500;
+		line-height: 1.15;
+		letter-spacing: -0.015em;
+	}
 
-      /* ---------- Hero ---------- */
-      .hero {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: clamp(2rem, 5vw, 4rem);
-        align-items: center;
-        padding: clamp(3.5rem, 9vw, 7rem) var(--marge);
-        border-bottom: 1px solid var(--rule);
-      }
+	.hero__domaines {
+		display: flex;
+		flex-wrap: wrap;
+		margin-top: 1.5rem;
+		font-family: var(--police-mono);
+		font-size: var(--t-s);
+		color: var(--encre-2);
+	}
 
-      /* Sans min-width, une ligne de bruit trop longue élargirait la colonne
-         au lieu d'être rognée, et déséquilibrerait la grille. */
-      .hero__titre {
-        min-width: 0;
-      }
+	/* Séparateur posé après chaque domaine sauf le dernier : à la coupure de
+	   ligne, la barre reste en fin de ligne au lieu d'ouvrir la suivante. */
+	.hero__domaines li:not(:last-child)::after {
+		content: '/';
+		margin-inline: 0.65em;
+		color: var(--accent);
+	}
 
-      .hero__actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.75rem;
-        margin-top: 2rem;
-      }
+	.hero__actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.75rem;
+		margin-top: clamp(2rem, 4vw, 2.75rem);
+	}
 
-      /* ---------- Panneaux de travaux ---------- */
-      .grille {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
-        gap: 1px;
-        background: var(--rule);
-        border: 1px solid var(--rule);
-      }
+	/* Fiche d'identité, à la manière d'une fiche technique. */
+	.fiche {
+		grid-column: 8 / -1;
+		align-self: start;
+		border: 1px solid var(--filet);
+		border-top: 2px solid var(--encre);
+	}
 
-      .panneau {
-        padding: 1.5rem;
-        background: var(--panel);
-        border-left: 2px solid transparent;
-        transition: border-color 0.15s ease;
-      }
+	.fiche__titre {
+		display: flex;
+		justify-content: space-between;
+		gap: 1rem;
+		padding: 0.85rem 1.25rem;
+		border-bottom: 1px solid var(--filet);
+		color: var(--encre);
+	}
 
-      .panneau:hover {
-        border-left-color: var(--signal);
-      }
+	.fiche__titre span:last-child {
+		color: var(--encre-3);
+		text-transform: none;
+		letter-spacing: 0;
+	}
 
-      .panneau h2 {
-        margin: 0 0 0.75rem;
-        font-family: var(--display);
-        font-size: 1.15rem;
-        font-weight: 600;
-        letter-spacing: -0.01em;
-      }
+	.fiche dl > div {
+		display: grid;
+		grid-template-columns: 7.5rem minmax(0, 1fr);
+		gap: 1rem;
+		align-items: baseline;
+		padding: 0.8rem 1.25rem;
+	}
 
-      .panneau p {
-        margin: 0 0 1.25rem;
-        font-size: 0.92rem;
-        color: var(--dim);
-      }
+	.fiche dl > div + div {
+		border-top: 1px solid var(--filet);
+	}
 
-      .tags {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.4rem;
-        margin: 0;
-        padding: 0;
-        list-style: none;
-      }
+	.fiche dd {
+		font-weight: 600;
+	}
 
-      .tags li {
-        padding: 0.2rem 0.55rem;
-        border: 1px solid var(--rule);
-        font-family: var(--mono);
-        font-size: 0.7rem;
-        color: var(--dim);
-      }
+	.fiche__pastille {
+		display: inline-block;
+		width: 0.6rem;
+		height: 0.6rem;
+		margin-right: 0.55rem;
+		border-radius: 50%;
+		background: var(--dispo);
+		box-shadow: 0 0 0 3px color-mix(in srgb, var(--dispo) 22%, transparent);
+	}
 
-      /* ---------- Certifications ---------- */
-      /* Les colonnes sont portées par la liste, pas par chaque ligne : une
-         grille par <li> se dimensionnerait sur son seul contenu, et la pastille
-         « PeopleCert » décalerait son intitulé par rapport à ceux des lignes
-         « AWS ». C'est la liste qui définit les trois pistes, et chaque ligne
-         s'y raccorde en `subgrid` — ce qui conserve la boîte du <li>, donc son
-         filet de séparation, tout en partageant les colonnes. */
-      .certifs {
-        display: grid;
-        grid-template-columns: auto auto 1fr;
-        column-gap: 1.25rem;
-        margin: 0;
-        padding: 0;
-        list-style: none;
-        border-top: 1px solid var(--rule);
-      }
+	.fiche__profils {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.25rem 1.25rem;
+	}
 
-      /* Les deux métadonnées ouvrent la ligne — année puis organisme — et
-         l'intitulé prend tout le reste. Les pastilles se retrouvent en colonne
-         alignée, ce qui rend les répétitions visibles (trois AWS, deux GCP)
-         sans avoir à regrouper les entrées, et l'année sert de repère
-         chronologique au fer à gauche. */
-      .certif {
-        display: grid;
-        grid-column: 1 / -1;
-        grid-template-columns: subgrid;
-        align-items: center;
-        padding: 0.9rem 0;
-        border-bottom: 1px solid var(--rule);
-      }
+	.fiche__profils a {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
+		text-decoration: none;
+		transition: color var(--duree) var(--courbe);
+	}
 
-      /* Chiffres à chasse fixe : sans ça, les années ne s'alignent pas
-         verticalement d'une ligne à l'autre dans les polices à chiffres
-         proportionnels. */
-      .certif__annee {
-        font-family: var(--mono);
-        font-size: 0.78rem;
-        color: var(--dim);
-        font-variant-numeric: tabular-nums;
-      }
+	.fiche__profils a:hover {
+		color: var(--accent-texte);
+	}
 
-      /* C'est l'intitulé qui porte l'information, il passe donc en police de
-         titrage plutôt qu'en chasse fixe — le reste de la ligne est du
-         métadonnée et garde le mono. */
-      .certif__intitule {
-        font-family: var(--display);
-        font-size: 1rem;
-        font-weight: 600;
-        line-height: 1.3;
-        color: var(--text);
-      }
+	/* ---------- Chiffres clés ---------- */
+	.chiffres {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+		gap: 1px;
+		margin: 0;
+		border-block: 1px solid var(--filet);
+		background: var(--filet);
+	}
 
-      .certif__intitule a {
-        text-decoration: none;
-        border-bottom: 1px solid var(--rule);
-      }
+	.chiffre {
+		display: grid;
+		gap: 0.35rem;
+		height: 100%;
+		padding: 1.25rem 1.25rem 1.4rem;
+		background: var(--papier);
+		text-decoration: none;
+		transition: background-color var(--duree) var(--courbe);
+	}
 
-      .certif__intitule a:hover {
-        color: var(--signal);
-        border-color: var(--signal);
-      }
+	.chiffre:hover {
+		background: var(--accent-voile);
+	}
 
-      /* Même pastille que les tags des travaux : l'organisme est de même
-         nature qu'un tag, il en reprend le dessin. `stretch` plutôt que
-         `start` : la sous-grille donne à la colonne la largeur du plus long
-         organisme, toutes les pastilles la remplissent donc et forment un bord
-         droit net au lieu d'une colonne en dents de scie. Texte centré. */
-      .certif__organisme {
-        justify-self: stretch;
-        padding: 0.2rem 0.55rem;
-        border: 1px solid var(--rule);
-        font-family: var(--mono);
-        font-size: 0.7rem;
-        color: var(--dim);
-        text-align: center;
-        white-space: nowrap;
-      }
+	.chiffre__valeur {
+		font-size: var(--t-3xl);
+		font-variation-settings: var(--etire);
+		font-weight: 800;
+		line-height: 1;
+		letter-spacing: -0.03em;
+		font-variant-numeric: tabular-nums;
+	}
 
-      /* ---------- Adaptatif ---------- */
-      @media (max-width: 900px) {
-        .hero {
-          grid-template-columns: 1fr;
-        }
-      }
+	.chiffre:hover .chiffre__valeur {
+		color: var(--accent);
+	}
 
-      @media (max-width: 640px) {
-        /* Trois zones sur une ligne ne tiennent plus : l'année et l'organisme
-           forment un bandeau de métadonnées, l'intitulé passe dessous sur toute
-           la largeur. On sort de la sous-grille — les colonnes n'ont plus à
-           être communes puisqu'il n'y en a plus qu'une. `start` sur la dernière
-           piste évite que la pastille ne soit étirée jusqu'au bord droit. */
-        .certifs {
-          grid-template-columns: 1fr;
-        }
+	/* ---------- Compétences ---------- */
+	.competences {
+		margin: 0;
+		border-bottom: 1px solid var(--filet);
+	}
 
-        .certif {
-          grid-column: 1;
-          grid-template-columns: auto 1fr;
-          gap: 0.45rem 0.9rem;
-        }
+	.competence {
+		display: grid;
+		grid-template-columns: repeat(12, minmax(0, 1fr));
+		column-gap: var(--colonnes-gap);
+		row-gap: 1rem;
+		align-items: baseline;
+		padding-block: 1.6rem;
+		border-top: 1px solid var(--filet);
+	}
 
-        .certif__organisme {
-          justify-self: start;
-        }
+	/* Gris et non rouge : le rouge reste au numéro de section, juste au-dessus. */
+	.competence__numero {
+		grid-column: 1 / span 2;
+	}
 
-        .certif__intitule {
-          grid-column: 1 / -1;
-        }
-      }
+	.competence__domaine {
+		grid-column: 3 / span 3;
+		font-size: var(--t-l);
+		font-variation-settings: var(--etire-mi);
+		font-weight: 750;
+		line-height: 1.2;
+	}
 
-      @media (prefers-reduced-motion: reduce) {
-        html {
-          scroll-behavior: auto;
-        }
+	.competence__domaine::first-letter {
+		text-transform: uppercase;
+	}
 
-        .ln,
-        .dot {
-          animation: none;
-          opacity: 1;
-        }
-      }
-    </style>
+	.competence__outils {
+		display: flex;
+		flex-wrap: wrap;
+		grid-column: 6 / -1;
+		gap: 0.5rem;
+		margin: 0;
+	}
 
-  </body>
-</html>
+	.competence__outils .puce {
+		font-size: var(--t-s);
+	}
+
+	/* ---------- Réalisations ---------- */
+	.travaux {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
+		gap: clamp(2.5rem, 4vw, 3rem) var(--colonnes-gap);
+		margin: 0;
+	}
+
+	.travail {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+		padding-top: 1rem;
+		border-top: 2px solid var(--encre);
+	}
+
+	.travail__numero {
+		margin-bottom: 0.5rem;
+		color: var(--accent);
+		font-size: var(--t-3xl);
+		font-variation-settings: var(--etire);
+		font-weight: 800;
+		line-height: 1;
+		letter-spacing: -0.03em;
+	}
+
+	.travail__titre {
+		font-size: var(--t-xl);
+		font-weight: 750;
+		line-height: 1.15;
+	}
+
+	.travail__resume {
+		color: var(--encre-2);
+	}
+
+	.travail__tags {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+		margin-top: auto;
+		padding-top: 0.5rem;
+	}
+
+	/* ---------- Certifications ---------- */
+	.certifs {
+		margin: 0;
+		border-top: 1px solid var(--filet);
+	}
+
+	.certif {
+		display: grid;
+		grid-template-columns: repeat(12, minmax(0, 1fr));
+		column-gap: var(--colonnes-gap);
+		row-gap: 0.5rem;
+		align-items: baseline;
+		padding-block: 1.1rem;
+		border-bottom: 1px solid var(--filet);
+		transition: background-color var(--duree) var(--courbe);
+	}
+
+	.certif:hover {
+		background: var(--accent-voile);
+	}
+
+	.certif__annee {
+		grid-column: 1 / span 2;
+		font-family: var(--police-mono);
+		font-size: var(--t-s);
+		font-variant-numeric: tabular-nums;
+		color: var(--encre-3);
+	}
+
+	.certif__intitule {
+		grid-column: 3 / span 7;
+		font-size: var(--t-l);
+		font-weight: 650;
+		line-height: 1.3;
+	}
+
+	.certif__intitule a {
+		text-decoration-color: var(--filet);
+	}
+
+	.certif__intitule a:hover {
+		color: var(--accent-texte);
+		text-decoration-color: currentColor;
+	}
+
+	.certif__organisme {
+		grid-column: 10 / -1;
+		justify-self: end;
+	}
+
+	/* ---------- Adaptations ---------- */
+	@media (max-width: 64rem) {
+		.hero__presentation,
+		.fiche {
+			grid-column: 1 / -1;
+		}
+
+		.competence__domaine {
+			grid-column: 3 / -1;
+		}
+
+		.competence__outils {
+			grid-column: 3 / -1;
+		}
+	}
+
+	@media (max-width: 40rem) {
+		.competence__numero,
+		.competence__domaine,
+		.competence__outils {
+			grid-column: 1 / -1;
+		}
+
+		.fiche dl > div {
+			grid-template-columns: 6rem minmax(0, 1fr);
+			padding-inline: 1rem;
+		}
+
+		.certif__annee {
+			grid-column: 1 / span 6;
+		}
+
+		.certif__organisme {
+			grid-column: 7 / -1;
+		}
+
+		.certif__intitule {
+			grid-column: 1 / -1;
+			grid-row: 2;
+		}
+	}
+</style>

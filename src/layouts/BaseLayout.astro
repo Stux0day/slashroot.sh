@@ -1,0 +1,33 @@
+---
+// Cadre de toutes les pages : <head>, lien d'évitement, barre du haut,
+// contenu, pied de page. Charge les jetons et la base CSS une fois pour tout
+// le site.
+import type { ImageMetadata } from 'astro';
+import Head from '../components/Head.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import '../styles/tokens.css';
+import '../styles/base.css';
+
+interface Props {
+	title: string;
+	description: string;
+	image?: ImageMetadata;
+	type?: 'website' | 'article';
+}
+---
+
+<!doctype html>
+<html lang="fr">
+	<head>
+		<Head {...Astro.props} />
+	</head>
+	<body>
+		<a class="lien-evitement" href="#contenu">Aller au contenu</a>
+		<SiteHeader />
+		<main id="contenu" tabindex="-1">
+			<slot />
+		</main>
+		<SiteFooter />
+	</body>
+</html>

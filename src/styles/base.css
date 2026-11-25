@@ -1,0 +1,304 @@
+/* ==========================================================================
+   Base : remise à zéro, éléments HTML et classes partagées par plusieurs
+   pages. Tout ce qui ne sert qu'à un composant reste dans son <style>.
+   Les valeurs viennent de tokens.css.
+   ========================================================================== */
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+html {
+	-webkit-text-size-adjust: 100%;
+	text-size-adjust: 100%;
+	/* Les ancres ne doivent pas finir sous la barre collante. */
+	scroll-padding-top: calc(var(--barre) + 1.5rem);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	html {
+		scroll-behavior: smooth;
+	}
+}
+
+body {
+	display: flex;
+	flex-direction: column;
+	min-height: 100dvh;
+	margin: 0;
+	background: var(--papier);
+	color: var(--encre);
+	font-family: var(--police);
+	/* 16 px sur mobile, 17 px vers 1440 px, jusqu'à 19 px sur un très grand écran. */
+	font-size: clamp(1rem, 0.85rem + 0.22vw, 1.2rem);
+	line-height: 1.6;
+	font-synthesis-weight: none;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+main {
+	flex: 1;
+}
+
+main:focus {
+	outline: none;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	margin: 0;
+	font-weight: 700;
+	line-height: 1.1;
+	text-wrap: balance;
+}
+
+p,
+ul,
+ol,
+dl,
+dd,
+figure,
+blockquote {
+	margin: 0;
+}
+
+p {
+	text-wrap: pretty;
+}
+
+img,
+svg,
+video {
+	display: block;
+	max-width: 100%;
+}
+
+img,
+video {
+	height: auto;
+}
+
+a {
+	color: inherit;
+	text-decoration-thickness: 1px;
+	text-underline-offset: 0.2em;
+}
+
+button {
+	font: inherit;
+	color: inherit;
+	cursor: pointer;
+}
+
+:where(a, button, summary) {
+	-webkit-tap-highlight-color: transparent;
+	touch-action: manipulation;
+}
+
+:focus-visible {
+	outline: 2px solid var(--accent-texte);
+	outline-offset: 3px;
+}
+
+::selection {
+	background: var(--accent);
+	color: var(--sur-accent);
+}
+
+ul[role='list'],
+ol[role='list'] {
+	padding: 0;
+	list-style: none;
+}
+
+code,
+kbd,
+samp,
+pre {
+	font-family: var(--police-mono);
+}
+
+/* ---------- Mise en page ----------------------------------------------- */
+
+.conteneur {
+	width: min(100% - 2 * var(--gouttiere), var(--largeur));
+	margin-inline: auto;
+}
+
+/* En-tête des pages intérieures (articles, dossiers, 404). */
+.page-entete {
+	padding-block: clamp(2.5rem, 6vw, 5rem) 0;
+}
+
+.page-titre {
+	margin-top: clamp(1.25rem, 3vw, 2rem);
+	font-size: var(--t-geant);
+	font-variation-settings: var(--etire);
+	font-weight: 850;
+	line-height: 0.88;
+	letter-spacing: -0.035em;
+}
+
+.page-chapo {
+	max-width: 40rem;
+	margin-top: clamp(1.25rem, 2.5vw, 2rem);
+	color: var(--encre-2);
+	font-size: var(--t-xl);
+	line-height: 1.4;
+}
+
+/* Une section de page : grand blanc au-dessus, rien en dessous — la section
+   suivante, ou le pied de page, apporte le sien. Placé après .page-entete :
+   « bloc--dernier » doit l'emporter sur son padding-block. */
+.bloc {
+	padding-top: var(--section);
+}
+
+.bloc--dernier {
+	padding-bottom: var(--section);
+}
+
+/* ---------- Petits éléments partagés ------------------------------------ */
+
+/* Étiquette en chasse fixe : numéros, métadonnées, intitulés de colonnes. */
+.etiquette {
+	font-family: var(--police-mono);
+	font-size: var(--t-xs);
+	font-weight: 500;
+	line-height: 1.4;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--encre-3);
+}
+
+/* Le « _ » des libellés (_OS, _system engineer) : motif du site. */
+.tiret {
+	color: var(--accent);
+}
+
+/* Pastille : un outil, un tag, un organisme. */
+.puce {
+	display: inline-block;
+	padding: 0.32em 0.62em;
+	border: 1px solid var(--filet);
+	font-family: var(--police-mono);
+	font-size: var(--t-xs);
+	line-height: 1.3;
+	white-space: nowrap;
+}
+
+.btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.6em;
+	min-height: 3rem;
+	padding: 0 1.35rem;
+	border: 2px solid var(--encre);
+	font-size: var(--t-m);
+	font-weight: 600;
+	line-height: 1;
+	text-decoration: none;
+	transition:
+		background-color var(--duree) var(--courbe),
+		border-color var(--duree) var(--courbe),
+		color var(--duree) var(--courbe);
+}
+
+.btn:hover {
+	background: var(--encre);
+	color: var(--papier);
+}
+
+.btn--plein {
+	border-color: var(--accent);
+	background: var(--accent);
+	color: var(--sur-accent);
+}
+
+.btn--plein:hover {
+	border-color: var(--encre);
+}
+
+.btn:active {
+	transform: translateY(1px);
+}
+
+/* Lien suivi d'une flèche qui avance au survol. */
+.lien-fleche {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.45em;
+	font-weight: 600;
+	text-decoration: none;
+	transition: color var(--duree) var(--courbe);
+}
+
+.lien-fleche svg {
+	flex: none;
+	transition: transform var(--duree) var(--courbe);
+}
+
+.lien-fleche:hover {
+	color: var(--accent-texte);
+}
+
+.lien-fleche:hover svg {
+	transform: translateX(3px);
+}
+
+.sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	margin: -1px;
+	padding: 0;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+	border: 0;
+}
+
+.lien-evitement {
+	position: absolute;
+	top: 0.75rem;
+	left: 0.75rem;
+	z-index: 100;
+	padding: 0.75rem 1rem;
+	background: var(--encre);
+	color: var(--papier);
+	font-weight: 600;
+	transform: translateY(-200%);
+}
+
+.lien-evitement:focus-visible {
+	transform: none;
+}
+
+/* ---------- Transitions entre pages ------------------------------------- */
+/* Fondu natif du navigateur d'une page à l'autre, sans JavaScript. La barre
+   du haut porte son propre nom de transition et reste donc immobile. */
+@view-transition {
+	navigation: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	@view-transition {
+		navigation: none;
+	}
+
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+	}
+}

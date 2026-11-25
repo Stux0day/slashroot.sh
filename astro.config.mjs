@@ -8,46 +8,53 @@ import { defineConfig, fontProviders } from 'astro/config';
 export default defineConfig({
 	site: 'https://example.com',
 	integrations: [mdx(), sitemap()],
+
+	// L'ancienne page /about ne contenait que du texte de démonstration : elle
+	// renvoie vers l'accueil, qui présente désormais le profil.
+	redirects: {
+		'/about': '/',
+	},
+
+	markdown: {
+		shikiConfig: {
+			// Un thème de coloration par mode. Avec `defaultColor: false`, Shiki
+			// n'impose aucune couleur : il pose --shiki-light et --shiki-dark sur
+			// chaque jeton, et src/styles/prose.css choisit selon le mode actif.
+			themes: {
+				light: 'github-light-default',
+				dark: 'github-dark-default',
+			},
+			defaultColor: false,
+		},
+	},
+
 	fonts: [
 		{
-			// Police pixel de la bannière d'accueil uniquement.
+			// Texte courant et titres. Police variable : graisse de 400 à 900,
+			// chasse de 100 % à 125 % — les grands titres utilisent la version
+			// élargie (voir --etire dans src/styles/tokens.css).
 			provider: fontProviders.google(),
-			name: 'VT323',
-			cssVariable: '--font-vt323',
-			fallbacks: ['ui-monospace', 'monospace'],
-		},
-		{
-			// Toute la barre supérieure : identité, dossiers et liens de section.
-			// Lettres volontairement décalées, façon signal corrompu. Ne convient
-			// qu'à des étiquettes courtes, jamais à du texte suivi, et devient
-			// illisible en dessous d'environ 1rem — d'où les planchers de clamp
-			// dans Topbar.astro.
-			provider: fontProviders.google(),
-			name: 'Rubik Glitch',
-			cssVariable: '--font-rubik-glitch',
-			fallbacks: ['ui-monospace', 'monospace'],
-		},
-		{
-			provider: fontProviders.local(),
-			name: 'Atkinson',
-			cssVariable: '--font-atkinson',
-			fallbacks: ['sans-serif'],
+			name: 'Archivo',
+			cssVariable: '--font-archivo',
+			weights: ['400 900'],
+			styles: ['normal', 'italic'],
+			subsets: ['latin'],
+			fallbacks: ['system-ui', 'sans-serif'],
 			options: {
-				variants: [
-					{
-						src: ['./src/assets/fonts/atkinson-regular.woff'],
-						weight: 400,
-						style: 'normal',
-						display: 'swap',
-					},
-					{
-						src: ['./src/assets/fonts/atkinson-bold.woff'],
-						weight: 700,
-						style: 'normal',
-						display: 'swap',
-					},
-				],
+				experimental: {
+					variableAxis: { wdth: [['100', '125']] },
+				},
 			},
+		},
+		{
+			// Code, étiquettes et métadonnées.
+			provider: fontProviders.google(),
+			name: 'JetBrains Mono',
+			cssVariable: '--font-jetbrains-mono',
+			weights: ['400 700'],
+			styles: ['normal'],
+			subsets: ['latin'],
+			fallbacks: ['ui-monospace', 'monospace'],
 		},
 	],
 });

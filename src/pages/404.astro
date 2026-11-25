@@ -1,0 +1,55 @@
+---
+import { SITE_TITLE } from '../consts';
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title={`Page introuvable — ${SITE_TITLE}`} description="Cette page n'existe pas, ou plus.">
+	<section class="page-entete bloc--dernier conteneur introuvable">
+		<p class="etiquette">Erreur 404</p>
+		<h1 class="page-titre">Introuvable<span class="tiret">.</span></h1>
+		<p class="page-chapo">Cette page n'existe pas, ou plus. Le lien était peut-être ancien.</p>
+
+		{/* Clin d'œil : le message que renverrait `ls`. Le chemin est complété
+		    par le script ci-dessous ; décoratif, donc masqué aux lecteurs d'écran. */}
+		<pre class="introuvable__console" aria-hidden="true"><code><span class="introuvable__invite">$</span> ls <span data-chemin>/page</span>
+ls: impossible d'accéder à '<span data-chemin>/page</span>': Aucun fichier ou dossier de ce type</code></pre>
+
+		<div class="introuvable__actions">
+			<a class="btn btn--plein" href="/">Retour à l'accueil</a>
+			<a class="btn" href="/blog/">Voir les articles</a>
+		</div>
+	</section>
+</BaseLayout>
+
+<script>
+	for (const element of document.querySelectorAll('[data-chemin]')) {
+		element.textContent = decodeURIComponent(location.pathname);
+	}
+</script>
+
+<style>
+	.introuvable__console {
+		max-width: 46rem;
+		margin-top: clamp(2rem, 4vw, 3rem);
+		padding: 1.25rem;
+		overflow-x: auto;
+		border: 1px solid var(--filet);
+		border-top: 2px solid var(--encre);
+		background: var(--code-fond);
+		font-size: var(--t-s);
+		line-height: 1.7;
+		white-space: pre-wrap;
+		overflow-wrap: anywhere;
+	}
+
+	.introuvable__invite {
+		color: var(--accent-texte);
+	}
+
+	.introuvable__actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.75rem;
+		margin-top: 2.5rem;
+	}
+</style>

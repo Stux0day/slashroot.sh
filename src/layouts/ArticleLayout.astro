@@ -1,0 +1,459 @@
+---
+// Page d'un article, sur la grille de 12 colonnes du site :
+//   grand écran (≥ 80rem)  rail du dossier sur 3 colonnes à gauche, article
+//                           sur les 9 autres : texte sur 6, sommaire sur 3 ;
+//   écran moyen            texte sur 8 colonnes, sommaire sur les 3 dernières ;
+//   petit écran            une colonne, sommaire repliable au-dessus du texte.
+// Puis les articles voisins du même dossier.
+import type { MarkdownHeading } from 'astro';
+import { Image } from 'astro:assets';
+import FilAriane from '../components/FilAriane.astro';
+import Icon from '../components/Icon.astro';
+import NavDossier from '../components/NavDossier.astro';
+import Sommaire from '../components/Sommaire.astro';
+import Tiret from '../components/Tiret.astro';
+import { SITE_TITLE } from '../consts';
+import {
+	type Article,
+	cheminSource,
+	dateISO,
+	dateLongue,
+	dossierDe,
+	libelleDossier,
+	type Statistiques,
+} from '../lib/articles';
+import BaseLayout from './BaseLayout.astro';
+import '../styles/prose.css';
+
+interface Props {
+	article: Article;
+	titres: MarkdownHeading[];
+	statistiques: Statistiques;
+	/** Tous les articles du dossier, dans l'ordre d'affichage (rail de gauche). */
+	freres: Article[];
+	precedent?: Article;
+	suivant?: Article;
+}
+
+const { article, titres, statistiques, freres, precedent, suivant } = Astro.props;
+const { title, description, pubDate, updatedDate, heroImage } = article.data;
+
+const dossier = dossierDe(article);
+const libelle = libelleDossier(dossier);
+const sousDossiers = cheminSource(article).slice(1);
+
+// Au-delà de h3, le sommaire deviendrait un plan détaillé.
+const sommaire = titres.filter((t) => t.depth === 2 || t.depth === 3);
+const avecSommaire = sommaire.length > 1;
+---
+
+<BaseLayout title={`${title} — ${SITE_TITLE}`} description={description} image={heroImage} type="article">
+	<div class="progression" aria-hidden="true"></div>
+
+	<div class="page-article conteneur">
+		<article class="article">
+			<header class="entete">
+				<FilAriane
+					courante={false}
+					etapes={[
+						{ texte: 'Articles', href: '/blog/' },
+						{ texte: libelle, href: `/blog/${dossier}/` },
+						...sousDossiers.map((nom) => ({ texte: nom })),
+					]}
+				/>
+				<h1 class="entete__titre">{title}</h1>
+				{description && <p class="entete__chapo">{description}</p>}
+				<dl class="entete__meta">
+					<div>
+						<dt class="etiquette">Publié le</dt>
+						<dd><time datetime={dateISO(pubDate)}>{dateLongue(pubDate)}</time></dd>
+					</div>
+					{
+						updatedDate && (
+							<div>
+								<dt class="etiquette">Mis à jour le</dt>
+								<dd>
+									<time datetime={dateISO(updatedDate)}>{dateLongue(updatedDate)}</time>
+								</dd>
+							</div>
+						)
+					}
+					<div>
+						<dt class="etiquette">Lecture</dt>
+						<dd>{statistiques.lecture} min</dd>
+					</div>
+					<div>
+						<dt class="etiquette">Longueur</dt>
+						<dd>{statistiques.mots.toLocaleString('fr-FR')} mots</dd>
+					</div>
+				</dl>
+			</header>
+
+			{
+				heroImage && (
+					<div class="visuel">
+						<Image
+							class="visuel__image"
+							src={heroImage}
+							alt=""
+							widths={[800, 1280, 1760, 2400]}
+							sizes="(min-width: 80rem) 75vw, calc(100vw - 2.5rem)"
+							loading="eager"
+						/>
+					</div>
+				)
+			}
+
+			<div class="corps">
+				{
+					avecSommaire && (
+						<div class="corps__sommaire-mobile">
+							<Sommaire titres={sommaire} variante="mobile" />
+						</div>
+					)
+				}
+				<div class="prose">
+					<slot />
+				</div>
+				{
+					avecSommaire && (
+						<aside class="corps__sommaire">
+							<Sommaire titres={sommaire} variante="bureau" />
+						</aside>
+					)
+				}
+			</div>
+		</article>
+
+		<aside class="rail" aria-label="Articles du dossier">
+			<NavDossier dossier={{ id: dossier, libelle }} articles={freres} courant={article.id} />
+		</aside>
+
+		<nav class="suite" aria-labelledby="suite-titre">
+			<p class="suite__titre">
+				<span class="etiquette" id="suite-titre">Dans le dossier <Tiret texte={libelle} /></span>
+				<a class="lien-fleche" href={`/blog/${dossier}/`}>
+					Tous les articles du dossier
+					<Icon nom="fleche-droite" taille={16} />
+				</a>
+			</p>
+			<div class="suite__voisins">
+				{
+					precedent && (
+						<a class="voisin" href={`/blog/${precedent.id}/`} rel="prev">
+							<span class="voisin__sens etiquette">
+								<Icon nom="fleche-gauche" taille={14} />
+								Précédent
+							</span>
+							<span class="voisin__titre">{precedent.data.title}</span>
+						</a>
+					)
+				}
+				{
+					suivant && (
+						<a class="voisin voisin--suivant" href={`/blog/${suivant.id}/`} rel="next">
+							<span class="voisin__sens etiquette">
+								Suivant
+								<Icon nom="fleche-droite" taille={14} />
+							</span>
+							<span class="voisin__titre">{suivant.data.title}</span>
+						</a>
+					)
+				}
+			</div>
+		</nav>
+	</div>
+</BaseLayout>
+
+<script>
+	// Bouton « Copier » sur chaque bloc de code. Le bloc est enveloppé pour que
+	// le bouton reste en place quand le code défile horizontalement ; la bande
+	// qui l'accueille est réservée par le CSS, rien ne bouge à l'insertion.
+	for (const pre of document.querySelectorAll<HTMLPreElement>('.prose pre')) {
+		const enveloppe = document.createElement('div');
+		enveloppe.className = 'bloc-code';
+		pre.replaceWith(enveloppe);
+		enveloppe.append(pre);
+
+		const bouton = document.createElement('button');
+		bouton.type = 'button';
+		bouton.className = 'copier';
+		bouton.textContent = 'Copier';
+		bouton.setAttribute('aria-label', 'Copier le code');
+		enveloppe.append(bouton);
+
+		let minuterie: ReturnType<typeof setTimeout> | undefined;
+		bouton.addEventListener('click', async () => {
+			const code = pre.querySelector('code')?.innerText ?? pre.innerText;
+			try {
+				await navigator.clipboard.writeText(code.replace(/\n$/, ''));
+				bouton.textContent = 'Copié';
+				bouton.dataset.etat = 'ok';
+			} catch {
+				bouton.textContent = 'Échec';
+			}
+			clearTimeout(minuterie);
+			minuterie = setTimeout(() => {
+				bouton.textContent = 'Copier';
+				delete bouton.dataset.etat;
+			}, 1800);
+		});
+	}
+</script>
+
+<style>
+	/* ---------- Barre de progression de lecture ----------
+	   Liée au défilement par le CSS seul (animation-timeline). Les navigateurs
+	   qui ne le gèrent pas ne l'affichent pas. */
+	.progression {
+		display: none;
+	}
+
+	@supports (animation-timeline: scroll()) {
+		.progression {
+			display: block;
+			position: fixed;
+			top: 0;
+			left: 0;
+			z-index: 60;
+			width: 100%;
+			height: 3px;
+			background: var(--accent);
+			transform-origin: 0 50%;
+			animation: lecture linear both;
+			animation-timeline: scroll(root);
+		}
+
+		@keyframes lecture {
+			from {
+				transform: scaleX(0);
+			}
+			to {
+				transform: scaleX(1);
+			}
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.progression {
+			display: none;
+		}
+	}
+
+	.page-article {
+		padding-bottom: var(--section);
+	}
+
+	/* ---------- En-tête ---------- */
+	.entete {
+		padding-block: clamp(2.5rem, 6vw, 5rem) clamp(1.5rem, 3vw, 2.5rem);
+	}
+
+	.entete__titre {
+		max-width: 22ch;
+		margin-top: clamp(1.25rem, 3vw, 2rem);
+		font-size: var(--t-3xl);
+		font-variation-settings: var(--etire);
+		font-weight: 800;
+		line-height: 0.98;
+		letter-spacing: -0.03em;
+		overflow-wrap: break-word;
+	}
+
+	.entete__chapo {
+		max-width: 44rem;
+		margin-top: clamp(1rem, 2vw, 1.5rem);
+		color: var(--encre-2);
+		font-size: var(--t-xl);
+		line-height: 1.4;
+	}
+
+	.entete__meta {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 1rem clamp(1.5rem, 4vw, 3.5rem);
+		margin-top: clamp(2rem, 4vw, 3rem);
+		padding-top: 1rem;
+		border-top: 2px solid var(--encre);
+	}
+
+	.entete__meta dd {
+		margin-top: 0.25rem;
+		font-weight: 600;
+		font-variant-numeric: tabular-nums;
+	}
+
+	.visuel :global(img) {
+		width: 100%;
+		aspect-ratio: 2 / 1;
+		object-fit: cover;
+		border: 1px solid var(--filet);
+	}
+
+	/* ---------- Corps : texte + sommaire (écran moyen) ---------- */
+	.corps {
+		display: grid;
+		grid-template-columns: repeat(12, minmax(0, 1fr));
+		column-gap: var(--colonnes-gap);
+		align-items: start;
+		padding-block: clamp(2rem, 4vw, 3.5rem) var(--section);
+	}
+
+	.prose {
+		grid-column: 1 / span 8;
+	}
+
+	.corps__sommaire {
+		position: sticky;
+		top: calc(var(--barre) + 2rem);
+		grid-column: 10 / -1;
+	}
+
+	.corps__sommaire-mobile,
+	.rail {
+		display: none;
+	}
+
+	/* ---------- Petit écran : une colonne ---------- */
+	@media (max-width: 68rem) {
+		.corps {
+			display: block;
+		}
+
+		.corps__sommaire {
+			display: none;
+		}
+
+		.corps__sommaire-mobile {
+			display: block;
+			max-width: 70ch;
+			margin-bottom: 2.5rem;
+		}
+	}
+
+	/* ---------- Grand écran : rail du dossier à gauche ----------
+	   La page entière passe sur la grille de 12 colonnes. L'article et sa
+	   suite prennent les colonnes 4 à 12 et transmettent cette grille à leurs
+	   enfants (subgrid) : le texte s'aligne ainsi sur les colonnes 4 à 9 et le
+	   sommaire sur 10 à 12, exactement comme le reste du site. */
+	@media (min-width: 80rem) {
+		.page-article {
+			display: grid;
+			grid-template-columns: repeat(12, minmax(0, 1fr));
+			column-gap: var(--colonnes-gap);
+			align-items: start;
+		}
+
+		.article,
+		.suite {
+			grid-column: 4 / -1;
+		}
+
+		.article {
+			display: grid;
+			grid-template-columns: subgrid;
+		}
+
+		.entete,
+		.visuel,
+		.corps {
+			grid-column: 1 / -1;
+		}
+
+		.corps {
+			grid-template-columns: subgrid;
+		}
+
+		.prose {
+			grid-column: 1 / span 6;
+		}
+
+		.corps__sommaire {
+			grid-column: 7 / -1;
+		}
+
+		/* Collant sur toute la hauteur de l'article et de sa suite. */
+		.rail {
+			display: block;
+			position: sticky;
+			top: calc(var(--barre) + 2rem);
+			grid-column: 1 / span 3;
+			grid-row: 1 / span 2;
+			max-height: calc(100dvh - var(--barre) - 4rem);
+			margin-top: clamp(2.5rem, 6vw, 5rem);
+			overflow-y: auto;
+			scrollbar-width: thin;
+			scrollbar-color: var(--filet) transparent;
+		}
+	}
+
+	/* ---------- Articles voisins ---------- */
+	.suite__titre {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: space-between;
+		align-items: baseline;
+		gap: 0.75rem 2rem;
+		padding-top: 1rem;
+		border-top: 2px solid var(--encre);
+	}
+
+	.suite__voisins {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: var(--colonnes-gap);
+		margin-top: 1.5rem;
+	}
+
+	.voisin {
+		display: grid;
+		align-content: start;
+		gap: 0.6rem;
+		padding: 1.25rem 1.25rem 1.5rem;
+		border: 1px solid var(--filet);
+		text-decoration: none;
+		transition:
+			border-color var(--duree) var(--courbe),
+			background-color var(--duree) var(--courbe);
+	}
+
+	.voisin--suivant {
+		grid-column: 2;
+		text-align: right;
+	}
+
+	.voisin__sens {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+	}
+
+	.voisin--suivant .voisin__sens {
+		justify-content: flex-end;
+	}
+
+	.voisin__titre {
+		font-size: var(--t-l);
+		font-weight: 700;
+		line-height: 1.3;
+	}
+
+	.voisin:hover {
+		border-color: var(--encre);
+		background: var(--accent-voile);
+	}
+
+	.voisin:hover .voisin__titre {
+		color: var(--accent-texte);
+	}
+
+	@media (max-width: 40rem) {
+		.suite__voisins {
+			grid-template-columns: minmax(0, 1fr);
+		}
+
+		.voisin--suivant {
+			grid-column: 1;
+		}
+	}
+</style>

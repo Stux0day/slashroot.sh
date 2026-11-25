@@ -1,0 +1,14 @@
+---
+// Affiche un libellé en passant le « _ » initial en couleur d'accent
+// (_OS, _system engineer…) : le motif graphique du site. Le tiret est masqué
+// aux lecteurs d'écran, qui liraient sinon « tiret bas ».
+interface Props {
+	texte: string;
+}
+
+const { texte } = Astro.props;
+---
+
+{/* Sur une seule ligne : un retour à la ligne glisserait une espace entre le
+    tiret et le mot. */}
+{texte.startsWith('_') ? <Fragment><span class="tiret" aria-hidden="true">_</span>{texte.slice(1)}</Fragment> : texte}

@@ -1,0 +1,213 @@
+---
+// Sommaire d'un article, en deux variantes :
+//   bureau  colonne collante à droite du texte, la section lue est surlignée ;
+//   mobile  bloc repliable au-dessus du texte.
+// L'article place les deux ; chacune n'est affichée qu'à sa taille d'écran
+// (display: none retire l'autre de l'arbre d'accessibilité).
+import type { MarkdownHeading } from 'astro';
+import { numero } from '../lib/articles';
+
+interface Props {
+	titres: MarkdownHeading[];
+	variante: 'bureau' | 'mobile';
+}
+
+const { titres, variante } = Astro.props;
+
+// Les h2 sont numérotés 01, 02… ; les h3 se rangent dessous sans numéro.
+let compteur = 0;
+const entrees = titres.map((titre) => ({
+	...titre,
+	numero: titre.depth === 2 ? numero(++compteur) : null,
+}));
+---
+
+{
+	variante === 'bureau' ? (
+		<nav class="sommaire sommaire--bureau" aria-labelledby="sommaire-titre">
+			<p class="sommaire__titre etiquette" id="sommaire-titre">
+				Sommaire
+			</p>
+			<ol role="list">
+				{entrees.map((e) => (
+					<li data-niveau={e.depth}>
+						<a href={`#${e.slug}`} data-cible={e.slug}>
+							{e.numero && <span class="sommaire__numero">{e.numero}</span>}
+							<span>{e.text}</span>
+						</a>
+					</li>
+				))}
+			</ol>
+		</nav>
+	) : (
+		<details class="sommaire sommaire--mobile">
+			<summary>
+				<span class="etiquette">Sommaire</span>
+				<span class="etiquette">{entrees.length} sections</span>
+			</summary>
+			<ol role="list">
+				{entrees.map((e) => (
+					<li data-niveau={e.depth}>
+						<a href={`#${e.slug}`}>
+							{e.numero && <span class="sommaire__numero">{e.numero}</span>}
+							<span>{e.text}</span>
+						</a>
+					</li>
+				))}
+			</ol>
+		</details>
+	)
+}
+
+<script>
+	// Surligne dans le sommaire de bureau la section en cours de lecture : la
+	// dernière dont le titre est passé au-dessus du tiers haut de l'écran.
+	const liens = [...document.querySelectorAll<HTMLAnchorElement>('.sommaire--bureau a[data-cible]')];
+	const cibles = liens
+		.map((lien) => document.getElementById(lien.dataset.cible ?? ''))
+		.filter((cible): cible is HTMLElement => cible !== null);
+
+	if (cibles.length > 0) {
+		let actif: HTMLAnchorElement | undefined;
+		let enAttente = false;
+
+		const mettreAJour = () => {
+			enAttente = false;
+			const seuil = window.innerHeight / 3;
+			let courante = cibles[0];
+			for (const cible of cibles) {
+				if (cible.getBoundingClientRect().top > seuil) break;
+				courante = cible;
+			}
+			const lien = liens.find((l) => l.dataset.cible === courante.id);
+			if (!lien || lien === actif) return;
+			actif?.removeAttribute('aria-current');
+			lien.setAttribute('aria-current', 'true');
+			actif = lien;
+		};
+
+		addEventListener(
+			'scroll',
+			() => {
+				if (enAttente) return;
+				enAttente = true;
+				requestAnimationFrame(mettreAJour);
+			},
+			{ passive: true },
+		);
+		mettreAJour();
+	}
+</script>
+
+<style>
+	ol {
+		margin: 0;
+	}
+
+	a {
+		display: flex;
+		gap: 0.75rem;
+		padding-block: 0.4rem;
+		color: var(--encre-2);
+		font-size: var(--t-s);
+		line-height: 1.4;
+		text-decoration: none;
+		transition: color var(--duree) var(--courbe);
+	}
+
+	a:hover {
+		color: var(--accent-texte);
+	}
+
+	.sommaire__numero {
+		flex: none;
+		min-width: 1.6rem;
+		padding-top: 0.12rem;
+		font-family: var(--police-mono);
+		font-size: var(--t-xs);
+		font-weight: 600;
+		color: var(--encre-3);
+	}
+
+	[data-niveau='3'] a {
+		padding-left: 2.35rem;
+		font-size: 0.8125rem;
+	}
+
+	/* ---------- Bureau ---------- */
+	/* Un rail fin à gauche de la liste ; la section lue y prend un segment
+	   d'accent. Le lien ne déborde que d'un pixel sur le rail : la zone de
+	   défilement rognerait tout débord plus large. */
+	.sommaire--bureau {
+		max-height: calc(100dvh - var(--barre) - 4rem);
+		overflow-y: auto;
+		padding-top: 1rem;
+		border-top: 2px solid var(--encre);
+		scrollbar-width: thin;
+		scrollbar-color: var(--filet) transparent;
+	}
+
+	.sommaire__titre {
+		margin-bottom: 0.75rem;
+	}
+
+	.sommaire--bureau ol {
+		border-left: 1px solid var(--filet);
+	}
+
+	.sommaire--bureau a {
+		margin-left: -1px;
+		padding-left: 0.85rem;
+		border-left: 2px solid transparent;
+	}
+
+	.sommaire--bureau [data-niveau='3'] a {
+		padding-left: 3.2rem;
+	}
+
+	.sommaire--bureau a[aria-current] {
+		border-left-color: var(--accent);
+		color: var(--encre);
+	}
+
+	.sommaire--bureau a[aria-current] .sommaire__numero {
+		color: var(--accent-texte);
+	}
+
+	/* ---------- Mobile ---------- */
+	.sommaire--mobile {
+		border-block: 1px solid var(--filet);
+	}
+
+	summary {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		min-height: 3rem;
+		cursor: pointer;
+		list-style: none;
+	}
+
+	summary::-webkit-details-marker {
+		display: none;
+	}
+
+	summary .etiquette:first-child {
+		color: var(--encre);
+	}
+
+	summary .etiquette:first-child::before {
+		content: '+';
+		display: inline-block;
+		width: 1.25rem;
+		color: var(--accent-texte);
+	}
+
+	.sommaire--mobile[open] summary .etiquette:first-child::before {
+		content: '−';
+	}
+
+	.sommaire--mobile ol {
+		padding-bottom: 1rem;
+	}
+</style>

@@ -1,0 +1,105 @@
+/* ==========================================================================
+   Jetons de design — slashroot.sh
+   --------------------------------------------------------------------------
+   C'est LE fichier à ouvrir pour changer l'apparence du site : couleurs,
+   polices, tailles et espacements y sont définis une seule fois, et tous les
+   composants s'en servent. Aucune couleur n'est écrite ailleurs.
+
+   Chaque couleur s'écrit light-dark(<mode clair>, <mode sombre>). Le bouton
+   de la barre du haut force l'un ou l'autre ; sans choix enregistré (ou sans
+   JavaScript), le navigateur suit la préférence du système.
+   ========================================================================== */
+
+:root {
+	color-scheme: light dark;
+
+	/* ---------- Accent ------------------------------------------------------
+	   Trois réglages changent la couleur d'accent dans les deux modes :
+
+	     --accent-h   teinte OKLCH, de 0 à 360
+	                  29 rouge · 40 vermillon · 55 orange · 150 vert
+	                  190 turquoise · 255 bleu · 275 indigo · 305 violet
+	                  345 magenta
+	     --accent-c   saturation (chroma). Le README donne la valeur maximale
+	                  de chaque teinte : au-delà, la couleur sort de ce que
+	                  l'écran sait afficher.
+	     --accent-l   luminosité en mode clair : 54 % pour un accent vif. Le
+	                  vert et le turquoise demandent 50 % pour rester lisibles.
+
+	   L'accent existe en deux versions :
+	     --accent         vif : aplats et grands éléments (logo, boutons, « _ »,
+	                      grands numéros, barre de lecture, filets d'accent) ;
+	     --accent-texte   petits textes en couleur (liens, étiquettes, survols).
+	   En mode clair, ce sont les mêmes. En mode sombre, l'accent vif est trop
+	   foncé pour un petit texte sur l'anthracite : --accent-texte est plus
+	   lumineux et tient 4,5:1. Les luminosités du mode sombre (66 % et 74 %)
+	   sont réglées pour ces contrastes : ne pas les modifier sans revérifier. */
+	--accent-h: 29;
+	--accent-c: 0.22;
+	--accent-l: 54%;
+
+	--accent: light-dark(
+		oklch(var(--accent-l) var(--accent-c) var(--accent-h)),
+		oklch(66% var(--accent-c) var(--accent-h))
+	);
+	--accent-texte: light-dark(
+		oklch(var(--accent-l) var(--accent-c) var(--accent-h)),
+		oklch(74% calc(var(--accent-c) * 0.7) var(--accent-h))
+	);
+	--sur-accent: light-dark(#ffffff, #1b1a18); /* texte posé sur un aplat d'accent */
+	--accent-voile: color-mix(in srgb, var(--accent) 10%, transparent); /* survols, surlignage */
+
+	/* ---------- Neutres ------------------------------------------------------
+	   Contrastes mesurés sur --papier (clair / sombre). Le fond sombre est un
+	   anthracite chaud et non un noir. En mode sombre, les blocs de code sont
+	   plus foncés que la page, comme un terminal encastré : sur un fond plus
+	   clair, les commentaires de la coloration deviendraient illisibles. */
+	--papier: light-dark(#f4f2ec, #2e2d2a); /* fond de page */
+	--papier-2: light-dark(#eae7df, #383733); /* aplats : code en ligne, en-têtes de tableau */
+	--code-fond: light-dark(#ffffff, #242321); /* fond des blocs de code */
+	--encre: light-dark(#141413, #f0eee8); /* texte principal, filets épais — 16,5 / 11,9 */
+	--encre-2: light-dark(#4f4c45, #bdb9b0); /* texte secondaire — 7,6 / 7,0 */
+	--encre-3: light-dark(#6b675f, #a8a49a); /* étiquettes, métadonnées — 5,0 / 5,5 */
+	--filet: light-dark(#d3cfc4, #4a4844); /* filets fins, purement décoratifs */
+	--dispo: light-dark(#1d7d3e, #6fcf86); /* pastille « disponible » — 4,6 / 7,2 */
+
+	/* ---------- Typographie ------------------------------------------------- */
+	--police: var(--font-archivo), system-ui, sans-serif;
+	--police-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+
+	/* Chasse élargie des titres : axe « wdth » de la police variable. */
+	--etire: 'wdth' 125;
+	--etire-mi: 'wdth' 112;
+
+	--t-xs: 0.75rem; /* 12 px : étiquettes en chasse fixe, jamais en dessous */
+	--t-s: 0.875rem;
+	--t-m: 1rem;
+	--t-l: 1.1875rem;
+	--t-xl: clamp(1.3125rem, 1.15rem + 0.7vw, 1.625rem);
+	--t-2xl: clamp(1.75rem, 1.3rem + 2vw, 2.75rem);
+	--t-3xl: clamp(2.25rem, 1.4rem + 3.8vw, 4.25rem);
+	--t-geant: clamp(3.25rem, 0.6rem + 10.6vw, 20rem); /* grand titre : grandit avec l'écran */
+
+	/* ---------- Mise en page ------------------------------------------------
+	   Le site occupe toute la largeur de la fenêtre, marges latérales comprises.
+	   Pour revenir à une colonne centrée, donner une largeur fixe à --largeur
+	   (86rem par exemple). */
+	--largeur: 100%; /* largeur maximale du contenu */
+	--gouttiere: clamp(1.25rem, 3.2vw, 5rem); /* marges latérales */
+	--colonnes-gap: clamp(1rem, 2.5vw, 2rem); /* espace entre colonnes */
+	--section: clamp(4.5rem, 3rem + 6vw, 9rem); /* espace entre sections */
+	--barre: 4rem; /* hauteur de la barre du haut */
+
+	/* ---------- Mouvement --------------------------------------------------- */
+	--duree: 180ms;
+	--courbe: cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* Choix explicite du visiteur (bouton de la barre du haut). */
+:root[data-theme='light'] {
+	color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+	color-scheme: dark;
+}

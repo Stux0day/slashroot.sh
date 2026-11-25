@@ -13,11 +13,12 @@ export interface Travail {
   tags: string[];
 }
 
-/** Dossiers de la barre supérieure.
+/** Dossiers d'articles (page /blog/, fil d'Ariane, pages de dossier).
  *  `id` = nom du répertoire dans src/content/blog/ (sans accent ni majuscule,
- *  il finit dans l'URL). `libelle` = ce qui s'affiche.
- *  L'ordre de cette liste est celui de la barre. Un dossier créé sur le disque
- *  mais absent d'ici reste publié et s'ajoute à la fin. */
+ *  il finit dans l'URL). `libelle` = ce qui s'affiche ; un « _ » en tête passe
+ *  en couleur d'accent.
+ *  L'ordre de cette liste est celui de la page des articles. Un dossier créé
+ *  sur le disque mais absent d'ici reste publié et s'ajoute à la fin. */
 export const dossiers: { id: string; libelle: string }[] = [
   { id: 'os', libelle: '_OS' },
   { id: 'systeme', libelle: '_SYSTÈMES' },
@@ -26,9 +27,8 @@ export const dossiers: { id: string; libelle: string }[] = [
   { id: 'divers', libelle: '_DIVERS' },
 ];
 
-/** Bannière de la page d'accueil, en police pixel.
- *  `titre` est encadré d'accolades et de guillemets par la mise en page :
- *  n'écrire ici que le texte. */
+/** Grand titre de la page d'accueil. `intro` s'affiche au-dessus en petites
+ *  capitales ; un « _ » en tête de `titre` passe en couleur d'accent. */
 export const banniere = {
   intro: " hi, i'm flynnhub, a ...",
   titre: '_system engineer',
@@ -41,6 +41,8 @@ export const identite = {
   depuis: '2019',
   ville: 'Lille, France',
   statut: 'Ouvert aux opportunités',
+  /** Domaines d'intervention, listés sous le titre de l'accueil. */
+  domaines: ['infra', 'automatisation', 'sécurité', 'observabilité'],
   email: 'contact@ton-domaine.fr',
   github: 'https://github.com/Stux0day',
   // Conservée sous forme percent-encodée : le fragment de profil contient un
@@ -143,10 +145,11 @@ export const stack: LigneStack[] = [
   // domaine reste à deux outils, et c'est assumé — il dit une compétence que
   // les autres ne recouvrent pas, la fondre ailleurs la ferait disparaître.
   { domaine: 'réseaux & interconnexion', outils: ['Cisco', 'OpenVPN', 'STP', 'vLAN', 'RIP'] },
-];/** Liens affichés dans le pied de page. `cle` sert aussi de clé de logo côté
- *  Footer.astro : n'y mettre que 'github' ou 'linkedin' tant qu'aucune autre
- *  icône n'y est déclarée. `identite.email` reste défini plus haut mais n'est
- *  plus affiché nulle part — il est là si tu veux le remettre un jour. */
+];/** Profils affichés dans la fiche de l'accueil et dans le pied de page. `cle`
+ *  sert aussi de nom d'icône (src/components/Icon.astro) et de libellé
+ *  (src/lib/profils.ts) : n'y mettre que 'github' ou 'linkedin' tant qu'aucune
+ *  autre marque n'y est déclarée. `identite.email` reste défini plus haut mais
+ *  n'est affiché nulle part — il est là si tu veux le remettre un jour. */
 export const contact: LigneConf[] = [
   { cle: 'github', valeur: identite.github, lien: identite.github },
   { cle: 'linkedin', valeur: identite.linkedin, lien: identite.linkedin },

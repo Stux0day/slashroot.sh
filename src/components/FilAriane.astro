@@ -1,0 +1,68 @@
+---
+// Fil d'Ariane en chasse fixe. La dernière étape sans lien est la page
+// courante (aria-current) si `courante` est vrai.
+import Tiret from './Tiret.astro';
+
+interface Props {
+	etapes: { texte: string; href?: string }[];
+	/** La dernière étape est-elle la page affichée ? */
+	courante?: boolean;
+}
+
+const { etapes, courante = true } = Astro.props;
+---
+
+<nav class="fil" aria-label="Fil d'Ariane">
+	<ol role="list">
+		{
+			etapes.map((etape, i) => (
+				<li>
+					{etape.href ? (
+						<a href={etape.href}>
+							<Tiret texte={etape.texte} />
+						</a>
+					) : (
+						<span aria-current={courante && i === etapes.length - 1 ? 'page' : undefined}>
+							<Tiret texte={etape.texte} />
+						</span>
+					)}
+				</li>
+			))
+		}
+	</ol>
+</nav>
+
+<style>
+	ol {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.25rem 0;
+		margin: 0;
+		font-family: var(--police-mono);
+		font-size: var(--t-xs);
+		font-weight: 500;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--encre-3);
+	}
+
+	li + li::before {
+		content: '/';
+		margin-inline: 0.6em;
+		color: var(--filet);
+	}
+
+	a {
+		text-decoration: none;
+		transition: color var(--duree) var(--courbe);
+	}
+
+	a:hover {
+		color: var(--accent-texte);
+		text-decoration: underline;
+	}
+
+	[aria-current] {
+		color: var(--encre);
+	}
+</style>
