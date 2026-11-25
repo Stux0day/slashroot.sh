@@ -6,6 +6,7 @@ import BaseHead from '../components/BaseHead.astro';
 import Footer from '../components/Footer.astro';
 import Topbar from '../components/Topbar.astro';
 import UnitArticle, { type Statistiques } from '../components/UnitArticle.astro';
+import { SITE_TITLE } from '../consts';
 
 // ---------------------------------------------------------------------------
 // Disposition des métadonnées. Changer cette seule valeur puis recharger.
@@ -49,9 +50,10 @@ const dossier = (id?.split('/').slice(0, -1) ?? []).join('/');
 const sommaire = headings.filter((h) => h.depth === 2 || h.depth === 3);
 ---
 
+<!doctype html>
 <html lang="fr">
 	<head>
-		<BaseHead title={title} description={description} />
+		<BaseHead title={`${title} — ${SITE_TITLE}`} description={description} />
 	</head>
 
 	<body>

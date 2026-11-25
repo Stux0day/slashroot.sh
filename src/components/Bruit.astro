@@ -235,11 +235,15 @@ const animations = `
 
   /* Hauteur d'une ligne : les commandes s'empilent au même endroit, donc le
      cadre ne bouge pas quand on passe d'une commande courte à une longue. */
+  /* overflow-x: clip coupe une commande longue au bord, comme les lignes du
+     journal au-dessus : sans lui, la frappe d'une longue commande élargissait
+     la page et faisait défiler l'écran horizontalement sur mobile. */
   .bruit__pile {
     position: relative;
     flex: 1 1 auto;
     min-width: 0;
     height: 1.8em;
+    overflow-x: clip;
   }
 
   .bruit__saisie {

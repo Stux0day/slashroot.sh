@@ -20,9 +20,11 @@
    Tout ce qui est spécifique à un composant reste dans son <style> scopé. */
 
 :root {
-  --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
-  --sans: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
-  --display: 'IBM Plex Sans Condensed', 'IBM Plex Sans', system-ui, sans-serif;
+  /* Les variables --font-plex-* sont posées par les composants <Font> d'Astro
+     (BaseHead.astro, index.astro) ; voir astro.config.mjs. */
+  --mono: var(--font-plex-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  --sans: var(--font-plex-sans), system-ui, -apple-system, sans-serif;
+  --display: var(--font-plex-condensed), var(--font-plex-sans), system-ui, sans-serif;
 
   --marge: clamp(1.25rem, 5vw, 5rem);
   --rail: 10rem;

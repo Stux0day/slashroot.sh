@@ -5,7 +5,17 @@
 // Les liens de sections pointent vers `/#ancre` et non `#ancre` : depuis une
 // page d'article, une ancre nue ne mènerait nulle part.
 import { type CollectionEntry, getCollection } from 'astro:content';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { certifs, dossiers as dossiersDeclares, identite } from '../data/site';
+
+// Le logo est le dessin du favicon, lu au build et écrit dans la page : un seul
+// fichier pour l'onglet et la barre, et aucune image à télécharger — en <img>,
+// le logo arrivait après le début de son animation au rechargement, et l'on ne
+// voyait d'abord qu'une petite tache rouge. Le commentaire du SVG est retiré.
+const logo = readFileSync(join(process.cwd(), 'public', 'favicon.svg'), 'utf8')
+  .replace(/<!--[\s\S]*?-->/g, '')
+  .replace('<svg ', '<svg aria-hidden="true" focusable="false" ');
 import { parOrdreDAffichage } from '../lib/tri';
 
 let tousLesArticles: CollectionEntry<'blog'>[] = [];
@@ -165,7 +175,11 @@ const dossiers = [...dossiersDeclares, ...nonDeclares].map(({ id, libelle }) => 
 ---
 
 <header class="topbar">
-  <a class="topbar__id" href="/">{identite.service}</a>
+  {/* Logo décoratif (aria-hidden) : le nom du lien vient du texte qui suit. */}
+  <a class="topbar__id" href="/">
+    <span class="topbar__logo" set:html={logo} />
+    {identite.service}
+  </a>
 
   <nav class="topbar__dossiers" aria-label="Dossiers d'articles">
     {
@@ -267,33 +281,86 @@ const dossiers = [...dossiersDeclares, ...nonDeclares].map(({ id, libelle }) => 
     grid-template-columns: 1fr auto 1fr;
     align-items: center;
     gap: 1rem;
-    padding: 0.85rem var(--marge);
+    /* Marge verticale de la barre, reprise par les menus déroulants pour
+       s'ouvrir juste sous son bord inférieur. Le plancher est l'ancienne
+       valeur : seuls les écrans larges ont une barre plus haute. */
+    --barre-pad: clamp(0.85rem, 1.3vw, 1.35rem);
+    padding: var(--barre-pad) var(--marge);
     border-bottom: 1px solid var(--rule);
     background: var(--voile);
     backdrop-filter: blur(8px);
     font-family: var(--mono);
-    font-size: 0.78rem;
+    font-size: 0.85rem;
   }
 
   /* Identité en Rubik Glitch : lettres volontairement décalées. Illisible en
      dessous d'environ 1rem, d'où le plancher du clamp. La casse d'origine est
      conservée — « Flynnhub.system » est un nom de domaine, le passer en
      capitales comme le reste de la barre lui ferait perdre cette lecture. */
+  /* Le logo précède le nom et remplace l'ancien rond rouge. justify-self:
+     start limite la zone cliquable au logo et au nom, au lieu de tout le tiers
+     gauche de la barre. */
   .topbar__id {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6em;
+    justify-self: start;
     min-width: 0;
     color: var(--text);
     font-family: var(--font-rubik-glitch), var(--mono);
-    font-size: clamp(0.95rem, 1.25vw, 1.15rem);
+    font-size: clamp(0.95rem, 1.6vw, 1.5rem);
     line-height: 1;
     text-decoration: none;
   }
 
-  /* Rubik Glitch n'a pas le glyphe U+25CF : sans cette ligne, le rond partirait
-     dans une police de repli et changerait de taille avec elle. */
-  .topbar__id::before {
-    content: '● ';
-    color: var(--signal);
-    font-family: var(--mono);
+  /* Le logo fait un tour complet à l'arrivée sur la page, puis pivote d'un
+     quart de tour au survol ou au focus clavier, comme sur la branche de
+     refonte. Le tour se fait à pleine taille, avec un départ et une arrivée
+     en douceur : réduit et lancé d'un coup, le logo n'était plus qu'une
+     tache rouge pendant les premières images.
+     Deux propriétés distinctes : `transform` pour l'arrivée, `rotate` pour le
+     survol — ainsi l'animation d'arrivée, une fois finie, ne bloque pas la
+     transition du survol. Les deux sont neutralisées pour qui demande moins
+     d'animations (prefers-reduced-motion, dans global.css). */
+  .topbar__logo {
+    display: block;
+    flex: none;
+    width: 1.6em;
+    height: 1.6em;
+    animation: topbar-logo-arrivee 0.9s cubic-bezier(0.65, 0, 0.35, 1) backwards;
+    transition: rotate 0.25s cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  /* Le SVG est injecté par set:html, hors de la portée des styles scopés. */
+  .topbar__logo :global(svg) {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .topbar__id:hover .topbar__logo,
+  .topbar__id:focus-visible .topbar__logo {
+    rotate: -90deg;
+  }
+
+  /* De nuit, le carré sombre du logo se confond avec la barre et seul « >_ »
+     reste visible : un liseré fin redessine le contour arrondi de l'icône
+     (rayon 6/32 du SVG). Une ombre et non une bordure : rien ne bouge. */
+  :global(:root[data-theme='sombre']) .topbar__logo {
+    border-radius: 18.75%;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--dim) 45%, transparent);
+  }
+
+  /* Ni fondu ni réduction : si l'animation ne se joue pas (onglet ouvert en
+     arrière-plan, outil de capture), le logo reste entier et visible. */
+  @keyframes topbar-logo-arrivee {
+    from {
+      transform: rotate(-360deg);
+    }
+
+    to {
+      transform: none;
+    }
   }
 
   /* Gouttières resserrées depuis le passage à Rubik Glitch : son dessin est
@@ -303,7 +370,7 @@ const dossiers = [...dossiersDeclares, ...nonDeclares].map(({ id, libelle }) => 
   .topbar__dossiers {
     display: flex;
     justify-content: center;
-    gap: 0.85rem;
+    gap: clamp(0.85rem, 1.1vw, 1.3rem);
   }
 
   .topbar__nav {
@@ -311,7 +378,7 @@ const dossiers = [...dossiersDeclares, ...nonDeclares].map(({ id, libelle }) => 
     align-items: center;
     justify-self: end;
     min-width: 0;
-    gap: 0.9rem;
+    gap: clamp(0.9rem, 1.1vw, 1.3rem);
   }
 
   /* Même police et même encre que les dossiers du centre : ces liens restent un
@@ -330,7 +397,7 @@ const dossiers = [...dossiersDeclares, ...nonDeclares].map(({ id, libelle }) => 
   .topbar__nav a {
     color: var(--text);
     font-family: var(--font-rubik-glitch), var(--mono);
-    font-size: clamp(1rem, 1.1vw, 1.05rem);
+    font-size: clamp(1rem, 1.3vw, 1.3rem);
     line-height: 1;
     text-transform: uppercase;
     text-decoration: none;
@@ -370,7 +437,7 @@ const dossiers = [...dossiersDeclares, ...nonDeclares].map(({ id, libelle }) => 
     color: var(--text);
     font: inherit;
     font-family: var(--font-rubik-glitch), var(--mono);
-    font-size: clamp(1rem, 1.1vw, 1.1rem);
+    font-size: clamp(1rem, 1.4vw, 1.35rem);
     line-height: 1;
     letter-spacing: 0;
     cursor: pointer;
@@ -387,7 +454,7 @@ const dossiers = [...dossiersDeclares, ...nonDeclares].map(({ id, libelle }) => 
 
   .dossier__menu {
     position: absolute;
-    top: calc(100% + 0.85rem);
+    top: calc(100% + var(--barre-pad));
     left: 0;
     z-index: 20;
     /* max-content pour que les branches ne soient jamais rognées ; le
@@ -418,8 +485,8 @@ const dossiers = [...dossiersDeclares, ...nonDeclares].map(({ id, libelle }) => 
   .dossier__menu::before {
     content: '';
     position: absolute;
-    inset: -0.85rem 0 auto 0;
-    height: 0.85rem;
+    inset: calc(-1 * var(--barre-pad)) 0 auto 0;
+    height: var(--barre-pad);
   }
 
   /* Trois façons d'ouvrir :
@@ -553,7 +620,7 @@ const dossiers = [...dossiersDeclares, ...nonDeclares].map(({ id, libelle }) => 
        et l'éclaircit de nuit d'un seul réglage. */
     color: var(--text);
     font-family: var(--mono);
-    font-size: 1.75rem;
+    font-size: clamp(1.75rem, 2.2vw, 2.15rem);
     line-height: 1;
     cursor: pointer;
   }
@@ -615,6 +682,11 @@ const dossiers = [...dossiersDeclares, ...nonDeclares].map(({ id, libelle }) => 
       justify-items: center;
     }
 
+    /* Barre empilée et centrée : l'identité se centre comme le reste. */
+    .topbar__id {
+      justify-self: center;
+    }
+
     .topbar__dossiers,
     .topbar__nav {
       flex-wrap: wrap;
@@ -623,11 +695,23 @@ const dossiers = [...dossiersDeclares, ...nonDeclares].map(({ id, libelle }) => 
       gap: 1rem;
     }
 
-    /* Un menu de 16rem déborderait de l'écran ; on le contraint. */
+    /* Les dossiers s'empilent sur plusieurs lignes : un menu ancré sous son
+       dossier déborde de l'écran dès que le dossier est à droite. Même masqué
+       (visibility: hidden), il élargissait la page — 425 px sur un écran de
+       375 px. Les menus s'ancrent donc sur la barre elle-même (son
+       positionnement sticky en fait le bloc conteneur) et en prennent la
+       largeur, marges comprises. */
+    .dossier {
+      position: static;
+    }
+
     .dossier__menu {
+      top: 100%;
+      left: var(--marge);
+      right: var(--marge);
+      width: auto;
       min-width: 0;
-      width: max-content;
-      max-width: min(78vw, 16rem);
+      max-width: none;
     }
   }
 </style>

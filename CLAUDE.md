@@ -11,6 +11,19 @@ Manage the background server with `astro dev stop`, `astro dev status`, and `ast
 Sous Windows PowerShell, `npm run dev -- --host` échoue (le `--` est avalé par npm.ps1) : utiliser
 `npx astro dev --host` pour exposer le site sur le réseau local (accès depuis un téléphone).
 
+Un `astro build` peut échouer sur `EBUSY: resource busy or locked` (fichier de `dist/` verrouillé par l'antivirus) :
+supprimer `dist/` (sortie générée, ignorée par Git) et relancer le build.
+
+## Pages et polices
+
+- Toute page doit commencer par `<!doctype html>` : sans lui, le navigateur passe en mode de compatibilité
+  (« quirks ») et applique d'anciennes règles de mise en page.
+- Polices servies par l'API de polices d'Astro (`astro.config.mjs`) : IBM Plex Sans, Sans Condensed et Mono,
+  VT323, Rubik Glitch. Les variables `--font-*` n'existent que si le `<head>` de la page contient les composants
+  `<Font>` correspondants : passer par `BaseHead.astro` (ou les recopier, comme `index.astro`), sinon `--sans`,
+  `--mono` et `--display` (dans `global.css`) tombent sur la police par défaut du navigateur.
+- Les dates s'affichent en français (`FormattedDate.astro`, `fr-FR`).
+
 ## Couleurs / thèmes
 
 - Le thème actif se choisit à **un seul endroit** : la ligne `@import './themes/<nom>.css';` en tête de

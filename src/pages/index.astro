@@ -4,6 +4,8 @@
 // Tu pourras extraire le <head> dans src/layouts/ plus tard.
 
 import { Font } from 'astro:assets';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 
 import Bruit from '../components/Bruit.astro';
 import Footer from '../components/Footer.astro';
@@ -15,10 +17,17 @@ import ThemeScript from '../components/ThemeScript.astro';
 import Topbar from '../components/Topbar.astro';
 
 // --- Contenu éditorial : voir src/data/site.ts --------------------------
+import { SITE_DESCRIPTION, VERSION_FAVICON } from '../consts';
 import { banniere, certifs, identite, travaux } from '../data/site';
 
 // Jetons de thème, reset et boutons : source unique.
 import '../styles/global.css';
+
+// Le bouton « Télécharger le CV » n'apparaît que si le fichier existe : un lien
+// mort en tête de page coûte plus qu'un bouton absent. Déposer le PDF dans
+// public/cv.pdf pour le faire apparaître ; en attendant, c'est le lien vers les
+// articles qui tient le rôle d'appel principal.
+const cvPresent = existsSync(join(process.cwd(), 'public', 'cv.pdf'));
 ---
 
 <!doctype html>
@@ -27,21 +36,20 @@ import '../styles/global.css';
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{identite.nom} — {identite.role}</title>
-    <meta
-      name="description"
-      content="Portfolio d'un administrateur systèmes et infrastructure : Linux, Terraform, gestion de secrets, supervision."
-    />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500&display=swap"
-      rel="stylesheet"
-    />
+    <meta name="description" content={SITE_DESCRIPTION} />
+    {/* Mêmes favicons que BaseHead.astro (voir le commentaire là-bas). */}
+    <link rel="icon" href={`/favicon.ico?v=${VERSION_FAVICON}`} sizes="32x32" />
+    <link rel="icon" href={`/favicon.svg?v=${VERSION_FAVICON}`} type="image/svg+xml" />
+    <link rel="apple-touch-icon" href={`/apple-touch-icon.png?v=${VERSION_FAVICON}`} />
+    <link rel="manifest" href="/site.webmanifest" />
 
     {/* Cette page a son propre <head> et ne passe pas par BaseHead : ses
-        polices se déclarent donc ici. VT323 pour la bannière, Rubik Glitch pour
-        la barre supérieure. */}
+        polices se déclarent donc ici. IBM Plex pour le texte (comme sur les
+        autres pages), VT323 pour la bannière, Rubik Glitch pour la barre
+        supérieure. */}
+    <Font cssVariable="--font-plex-sans" preload={[{ weight: 400, style: 'normal' }]} />
+    <Font cssVariable="--font-plex-condensed" />
+    <Font cssVariable="--font-plex-mono" preload={[{ weight: 400 }]} />
     <Font cssVariable="--font-vt323" preload />
     <Font cssVariable="--font-rubik-glitch" preload />
 
@@ -52,21 +60,27 @@ import '../styles/global.css';
     <Topbar />
 
     <main>
-      <!-- HERO : titre en police pixel à gauche, sortie systemctl à droite -->
+      <!-- HERO : titre en police pixel sur toute la largeur, puis le flux de
+           journal à gauche et la sortie systemctl à droite -->
       <section class="hero">
-        <div class="hero__titre">
+        <header class="hero__entete">
           <p class="banniere__intro">
             <span class="banniere__ponct">//</span>
             {banniere.intro}
           </p>
-          <h1 class="banniere__titre">
+          {/* --nb-car : nombre de signes affichés (le titre plus {" et "}), pour
+              que l'animation de frappe avance d'un caractère à chaque pas. */}
+          <h1 class="banniere__titre" style={`--nb-car: ${banniere.titre.length + 4}`}>
             <span class="banniere__ponct" aria-hidden="true">{'{"'}</span>
             {banniere.titre}
             <span class="banniere__ponct" aria-hidden="true">{'"}'}</span>
           </h1>
+        </header>
+        <div class="hero__titre">
           <Bruit />
           <div class="hero__actions">
-            <a class="btn btn--primaire" href="/cv.pdf">Télécharger le CV</a>
+            {cvPresent && <a class="btn btn--primaire" href="/cv.pdf" download>Télécharger le CV</a>}
+            <a class:list={['btn', { 'btn--primaire': !cvPresent }]} href="/blog/">Lire les articles</a>
           </div>
         </div>
 
@@ -158,22 +172,67 @@ import '../styles/global.css';
          Tailles calées sur une demi-largeur, le titre partageant la ligne
          avec le bloc systemctl. */
       .banniere__intro {
-        margin: 0 0 0.15em;
+        margin: 0 0 0.1em;
         color: var(--signal);
         font-family: var(--font-vt323), var(--mono);
-        font-size: clamp(1rem, 1.8vw, 1.5rem);
+        font-size: clamp(1.05rem, 1.7vw, 1.6rem);
         letter-spacing: 0.06em;
         text-transform: uppercase;
       }
 
+      /* Le titre a sa propre ligne, sur toute la largeur du hero : coincé dans
+         une demi-colonne, il plafonnait à 67 px pour tenir sur une ligne.
+         Taille retenue : ~86 px à 1440 px de large, 92 px au plus. À 130 px,
+         il écrasait le reste de la page.
+         VT323 occupe 0,42 em par caractère, soit 8,4 em pour les 20 signes de
+         {"_system engineer"} : il tient sur une ligne à toutes les largeurs,
+         le plancher de 2,2rem compris (mobile). */
       .banniere__titre {
         margin: 0;
         color: var(--signal);
         font-family: var(--font-vt323), var(--mono);
         font-weight: 400;
-        font-size: clamp(2.2rem, 5vw, 4.2rem);
-        line-height: 1;
+        font-size: clamp(2.2rem, 6vw, 5.75rem);
+        line-height: 0.95;
         letter-spacing: 0.02em;
+      }
+
+      /* De nuit, un halo très léger et immobile autour des lettres : assez pour
+         que le titre ne paraisse pas terne, pas assez pour faire néon. Ni
+         curseur ni lueur vive — la page anime déjà le flux de journal, la
+         saisie des commandes et le point d'état. De jour, aucun effet : sur
+         fond clair, un halo ne ferait que flouter les lettres. */
+      :root[data-theme='sombre'] .banniere__titre {
+        text-shadow: 0 0 0.45em color-mix(in srgb, var(--signal) 22%, transparent);
+      }
+
+      /* Frappe au chargement : le titre s'écrit caractère par caractère, comme
+         tapé dans un terminal, puis reste immobile — une seule fois, rien ne
+         boucle ni ne clignote. La boîte du titre épouse son texte
+         (fit-content) et VT323 est à chasse fixe : chaque pas de steps()
+         découvre donc exactement un caractère. Les marges négatives du
+         clip-path laissent passer le halo au-dessus, en dessous et à gauche.
+         Sans fill-mode forwards : une fois fini, plus rien n'est découpé.
+         prefers-reduced-motion (global.css) l'achève instantanément. */
+      .banniere__titre {
+        width: fit-content;
+        animation: banniere-frappe 1.1s steps(var(--nb-car), end) 0.25s backwards;
+      }
+
+      @keyframes banniere-frappe {
+        from {
+          clip-path: inset(-0.6em 100% -0.6em -0.6em);
+        }
+
+        to {
+          clip-path: inset(-0.6em 0 -0.6em -0.6em);
+        }
+      }
+
+      @media print {
+        .banniere__titre {
+          animation: none;
+        }
       }
 
       /* Accolades, guillemets et « // » : ponctuation de code, en retrait
@@ -186,16 +245,28 @@ import '../styles/global.css';
       .hero {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: clamp(2rem, 5vw, 4rem);
+        gap: clamp(1.75rem, 3.5vw, 3rem) clamp(2rem, 5vw, 4rem);
         align-items: center;
         padding: clamp(3.5rem, 9vw, 7rem) var(--marge);
         border-bottom: 1px solid var(--rule);
+      }
+
+      /* Première ligne de la grille : l'intro et le titre, sur les deux colonnes. */
+      .hero__entete {
+        grid-column: 1 / -1;
+        min-width: 0;
       }
 
       /* Sans min-width, une ligne de bruit trop longue élargirait la colonne
          au lieu d'être rognée, et déséquilibrerait la grille. */
       .hero__titre {
         min-width: 0;
+      }
+
+      /* Le flux ouvre désormais sa colonne : sa marge du haut, prévue pour le
+         séparer du titre, n'a plus lieu d'être. */
+      .hero .hero__titre .bruit {
+        margin-top: 0;
       }
 
       .hero__actions {

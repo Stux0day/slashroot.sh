@@ -1,113 +1,146 @@
 ---
-import { Image } from 'astro:assets';
+// Index des articles : tous les dossiers sur une page, dans l'ordre de la
+// barre supérieure (src/data/site.ts), chacun trié selon src/lib/tri.ts.
 import { getCollection } from 'astro:content';
 import BaseHead from '../../components/BaseHead.astro';
 import Footer from '../../components/Footer.astro';
-import FormattedDate from '../../components/FormattedDate.astro';
+import ListeArticles from '../../components/ListeArticles.astro';
 import Topbar from '../../components/Topbar.astro';
-import { SITE_DESCRIPTION, SITE_TITLE } from '../../consts';
+import { SITE_TITLE } from '../../consts';
+import { dossiers as dossiersDeclares } from '../../data/site';
 import { parOrdreDAffichage } from '../../lib/tri';
 
-const posts = (await getCollection('blog')).sort(parOrdreDAffichage);
+const articles = await getCollection('blog');
+const dossierDe = (id: string) => id.split('/')[0];
+const presents = new Set(articles.map((article) => dossierDe(article.id)));
+
+// Même règle que la barre supérieure : les dossiers déclarés, dans leur ordre,
+// puis ceux qui existent sur le disque sans être déclarés, par ordre
+// alphabétique. Un dossier déclaré mais vide n'apparaît pas.
+const dossiers = [
+	...dossiersDeclares.filter((dossier) => presents.has(dossier.id)),
+	...[...presents]
+		.filter((id) => !dossiersDeclares.some((dossier) => dossier.id === id))
+		.sort((a, b) => a.localeCompare(b, 'fr'))
+		.map((id) => ({ id, libelle: id })),
+].map((dossier) => ({
+	...dossier,
+	articles: articles.filter((article) => dossierDe(article.id) === dossier.id).sort(parOrdreDAffichage),
+}));
+
+const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? 's' : ''}`;
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="fr">
 	<head>
-		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
-		<style>
-			main {
-				width: 960px;
-			}
-			ul {
-				display: flex;
-				flex-wrap: wrap;
-				gap: 2rem;
-				list-style-type: none;
-				margin: 0;
-				padding: 0;
-			}
-			ul li {
-				width: calc(50% - 1rem);
-			}
-			ul li * {
-				text-decoration: none;
-				transition: 0.2s ease;
-			}
-			ul li:first-child {
-				width: 100%;
-				margin-bottom: 1rem;
-				text-align: center;
-			}
-			ul li:first-child img {
-				width: 100%;
-			}
-			ul li:first-child .title {
-				font-size: 2.369rem;
-			}
-			ul li img {
-				margin-bottom: 0.5rem;
-				border-radius: 12px;
-			}
-			ul li a {
-				display: block;
-			}
-			.title {
-				margin: 0;
-				color: rgb(var(--black));
-				line-height: 1;
-			}
-			.date {
-				margin: 0;
-				color: rgb(var(--gray));
-			}
-			ul li a:hover h4,
-			ul li a:hover .date {
-				color: rgb(var(--accent));
-			}
-			ul a:hover img {
-				box-shadow: var(--box-shadow);
-			}
-			@media (max-width: 720px) {
-				ul {
-					gap: 0.5em;
-				}
-				ul li {
-					width: 100%;
-					text-align: center;
-				}
-				ul li:first-child {
-					margin-bottom: 0;
-				}
-				ul li:first-child .title {
-					font-size: 1.563em;
-				}
-			}
-		</style>
+		<BaseHead
+			title={`Articles — ${SITE_TITLE}`}
+			description={`Les ${articles.length} articles du site, rangés par dossier.`}
+		/>
 	</head>
+
 	<body>
 		<Topbar />
 		<main>
-			<section>
-				<ul>
-					{
-						posts.map((post) => (
-							<li>
-								<a href={`/blog/${post.id}/`}>
-									{post.data.heroImage && (
-										<Image width={720} height={360} src={post.data.heroImage} alt="" />
-									)}
-									<h4 class="title">{post.data.title}</h4>
-									<p class="date">
-										<FormattedDate date={post.data.pubDate} />
-									</p>
-								</a>
-							</li>
-						))
-					}
-				</ul>
-			</section>
+			<header class="entete">
+				<p class="rail__label"># articles</p>
+				<h1>Articles</h1>
+				<p class="chapo">
+					{pluriel(articles.length, 'article')}, rangés en {pluriel(dossiers.length, 'dossier')}.
+				</p>
+			</header>
+
+			{
+				dossiers.map((dossier) => (
+					<section class="rubrique" aria-labelledby={`titre-${dossier.id}`}>
+						<h2 class="rubrique__titre" id={`titre-${dossier.id}`}>
+							<a href={`/blog/${dossier.id}/`}>{dossier.libelle}</a>
+							<span class="rubrique__nombre">{pluriel(dossier.articles.length, 'article')}</span>
+						</h2>
+						<ListeArticles articles={dossier.articles} />
+					</section>
+				))
+			}
 		</main>
 		<Footer />
 	</body>
 </html>
+
+<style>
+	/* Même gabarit que les pages de dossier : une colonne de lecture centrée. */
+	main {
+		max-width: 46rem;
+		margin: 0 auto;
+		padding: clamp(2.5rem, 6vw, 4.5rem) var(--marge);
+	}
+
+	.entete {
+		padding-bottom: 1.5rem;
+		border-bottom: 1px solid var(--rule);
+	}
+
+	.rail__label {
+		margin: 0 0 0.75rem;
+		color: var(--signal);
+		font-family: var(--mono);
+		font-size: 0.78rem;
+	}
+
+	.entete h1 {
+		margin: 0;
+		color: var(--text);
+		font-family: var(--display);
+		font-weight: 700;
+		font-size: clamp(1.6rem, 3.5vw, 2.2rem);
+		line-height: 1.1;
+	}
+
+	.chapo {
+		margin: 0.75rem 0 0;
+		color: var(--dim);
+		font-family: var(--mono);
+		font-size: 0.82rem;
+	}
+
+	/* « rubrique » et non « dossier » : la barre du haut utilise déjà la classe
+	   .dossier, et son script s'en sert pour savoir si un clic a eu lieu dans un
+	   de ses menus. */
+	.rubrique {
+		margin-top: clamp(2.5rem, 5vw, 3.5rem);
+	}
+
+	/* Le nom du dossier mène à sa page ; le compte d'articles se range à droite,
+	   en chasse fixe comme les dates de la liste. */
+	.rubrique__titre {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 1rem;
+		margin: 0;
+		padding-bottom: 0.75rem;
+		border-bottom: 1px solid var(--rule);
+		font-family: var(--display);
+		font-size: 1.3rem;
+		font-weight: 700;
+		line-height: 1.2;
+	}
+
+	.rubrique__titre a {
+		color: var(--text);
+		text-decoration: none;
+	}
+
+	.rubrique__titre a:hover,
+	.rubrique__titre a:focus-visible {
+		color: var(--signal);
+	}
+
+	.rubrique__nombre {
+		flex: none;
+		color: var(--dim);
+		font-family: var(--mono);
+		font-size: 0.78rem;
+		font-weight: 400;
+	}
+</style>

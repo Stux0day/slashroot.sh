@@ -54,6 +54,35 @@ Un thème renseigne ces variables, dans ses deux variantes :
   le `@import` de `global.css` dessus. Les thèmes existants respectent le contraste WCAG AA (4.5:1) : vérifie
   `--signal` et `--dim` sur `--void` et sur `--panel`, dans les deux variantes.
 
+## 🖼️ Favicon
+
+Le dessin est dans [`public/favicon.svg`](public/favicon.svg) : une invite de terminal `>_`, chevron rouge et curseur
+clair sur le fond sombre du site. Les autres formats en sont générés :
+
+| Fichier                       | Taille        | Utilisé par                                   |
+| :---------------------------- | :------------ | :-------------------------------------------- |
+| `public/favicon.svg`          | vectoriel     | onglets des navigateurs récents               |
+| `public/favicon.ico`          | 16, 32, 48 px | anciens navigateurs, favoris, Windows         |
+| `public/apple-touch-icon.png` | 180 px        | écran d'accueil iPhone et iPad                |
+| `public/icon-192.png`, `icon-512.png` | 192, 512 px | écran d'accueil Android (`site.webmanifest`) |
+
+Après une modification du SVG, régénère les autres formats :
+
+```sh
+node scripts/favicons.mjs
+```
+
+Puis incrémente `VERSION_FAVICON` dans [`src/consts.ts`](src/consts.ts). Ce numéro est ajouté à l'adresse des
+icônes (`/favicon.svg?v=2`) : les navigateurs, Firefox surtout, gardent un favicon en cache sans le redemander, et
+seule une nouvelle adresse leur fait prendre le nouveau.
+
+Les couleurs du favicon sont fixes (un favicon ne lit pas les variables CSS) : si tu changes de thème, change-les
+dans le SVG puis relance le script.
+
+Le logo de la barre du haut, à gauche de `flynnhub.system`, est ce même dessin : `Topbar.astro` lit
+`public/favicon.svg` au build et l'écrit dans la page. Il fait un tour complet à l'arrivée sur la page et un quart
+de tour au survol.
+
 ## 🧞 Commands
 
 All commands are run from the root of the project, from a terminal:

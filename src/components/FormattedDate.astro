@@ -1,14 +1,20 @@
 ---
+// Date courte en français : « 14 août 2026 ».
 interface Props {
 	date: Date;
 }
 
 const { date } = Astro.props;
+
+// AAAA-MM-JJ en heure locale : toISOString() passerait en UTC et reculerait
+// d'un jour les dates posées à minuit.
+const deuxChiffres = (n: number) => String(n).padStart(2, '0');
+const iso = `${date.getFullYear()}-${deuxChiffres(date.getMonth() + 1)}-${deuxChiffres(date.getDate())}`;
 ---
 
-<time datetime={date.toISOString()}>
+<time datetime={iso}>
 	{
-		date.toLocaleDateString('en-us', {
+		date.toLocaleDateString('fr-FR', {
 			year: 'numeric',
 			month: 'short',
 			day: 'numeric',
